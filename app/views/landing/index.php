@@ -39,6 +39,7 @@
                     <?php if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'admin'): ?>
                         <li class="nav-item"><a class="nav-link" href="?page=admin_dashboard">Dashboard Saya</a></li>
                     <?php endif; ?>
+                    <li class="nav-item"><a class="nav-link" href="?page=profile">Profil</a></li>
                 </ul>
                 <form class="d-flex me-3" method="get" action="">
                     <input type="hidden" name="page" value="home">

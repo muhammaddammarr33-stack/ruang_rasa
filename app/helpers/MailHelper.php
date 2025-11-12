@@ -1,11 +1,44 @@
 <?php
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require_once __DIR__ . '/../../vendor/autoload.php';
+
 class MailHelper
 {
-    public static function sendMail($to, $subject, $message)
+    public static function send($to, $subject, $body)
     {
-        $headers = "MIME-Version: 1.0" . "\r\n";
-        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-        $headers .= "From: Ruang Rasa <no-reply@ruangrasa.local>" . "\r\n";
-        return mail($to, $subject, $message, $headers);
+        try {
+            $config = include __DIR__ . '/../../config/mail.php';
+            $mode = $config['mode'];
+
+            $mail = new PHPMailer(true);
+            $mail->isSMTP();
+
+            if ($mode === 'gmail') {
+                $mail->Host = $config['gmail']['host'];
+                $mail->Port = $config['gmail']['port'];
+                $mail->SMTPAuth = true;
+                $mail->Username = $config['gmail']['user'];
+                $mail->Password = $config['gmail']['pass'];
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            } else {
+                $mail->Host = $config['mailhog']['host'];
+                $mail->Port = $config['mailhog']['port'];
+                $mail->SMTPAuth = false;
+            }
+
+            $mail->setFrom('no-reply@ruangrasa.local', 'Ruang Rasa');
+            $mail->addAddress($to);
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body = $body;
+
+            $mail->send();
+            return true;
+        } catch (Exception $e) {
+            error_log("Mail error: " . $mail->ErrorInfo);
+            return false;
+        }
     }
 }

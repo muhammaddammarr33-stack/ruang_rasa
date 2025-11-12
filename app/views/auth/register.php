@@ -1,58 +1,57 @@
-<?php // app/views/auth/register.php ?>
 <!doctype html>
 <html lang="id">
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Daftar - Ruang Rasa</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/public/assets/css/ruang-rasa.css">
+    <title>Registrasi - Ruang Rasa</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
-<body>
-    <div class="auth-wrapper">
-        <div class="auth-card">
-            <h1>Buat Akun Baru 💕</h1>
-            <p class="subtitle">Mulai petualangan mengirim hadiah penuh makna</p>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h4 class="text-center mb-3">Buat Akun Baru</h4>
 
-            <?php if (!empty($_SESSION['error'])): ?>
-                <div class="alert alert-danger">
-                    <?= htmlspecialchars($_SESSION['error'], ENT_QUOTES, 'UTF-8') ?>
-                    <?php unset($_SESSION['error']); ?>
+                        <?php if (!empty($_SESSION['error'])): ?>
+                            <div class="alert alert-danger"><?= $_SESSION['error'];
+                            unset($_SESSION['error']); ?></div>
+                        <?php endif; ?>
+
+                        <form method="POST" action="?page=register">
+                            <?= SecurityHelper::csrfInput(); ?>
+                            <div class="mb-3">
+                                <label>Nama Lengkap</label>
+                                <input type="text" name="name" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label>Email</label>
+                                <input type="email" name="email" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label>Password</label>
+                                <input type="password" name="password" class="form-control" required minlength="6">
+                            </div>
+                            <div class="mb-3">
+                                <label>No. Telepon</label>
+                                <input type="text" name="phone" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label>Alamat</label>
+                                <textarea name="address" class="form-control"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">Daftar Sekarang</button>
+                        </form>
+                        <div class="mt-3 text-center">
+                            <a href="?page=login">Sudah punya akun? Masuk</a>
+                        </div>
+                    </div>
                 </div>
-            <?php endif; ?>
-
-            <form method="post" action="?page=register">
-                <div class="form-group">
-                    <label class="form-label">Nama Lengkap</label>
-                    <input type="text" name="name" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Email</label>
-                    <input type="email" name="email" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input type="password" name="password" class="form-control" required>
-                </div>
-                <button type="submit" class="btn-primary">Daftar Sekarang</button>
-            </form>
-
-            <div class="divider"></div>
-
-            <p class="text-center">
-                <a href="?page=login" class="link back-link">
-                    ← Sudah punya akun? Masuk di sini
-                </a>
-            </p>
-
+            </div>
         </div>
     </div>
-
-    <script src="<?= BASE_URL ?>/public/assets/js/ruang-rasa.js"></script>
 </body>
 
 </html>

@@ -1,0 +1,16 @@
+{
+    "name": "shinn/ruang_rasa",
+    "autoload": {
+        "psr-4": {
+            "Shinn\\RuangRasa\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Muhammad Ammar"
+        }
+    ],
+    "require": {
+        "phpmailer/phpmailer": "^7.0"
+    }
+}

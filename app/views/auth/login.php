@@ -1,61 +1,50 @@
-<?php
-require_once __DIR__ . "/../../../config/database.php";
-?>
 <!doctype html>
 <html lang="id">
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Login - Ruang Rasa</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/public/assets/css/ruang-rasa.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
-<body>
-    <div class="auth-wrapper">
-        <div class="auth-card">
-            <h1>Halo, Kembali Lagi 💙</h1>
-            <p class="subtitle">Masuk untuk lanjutkan mengirim kejutan penuh rasa</p>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h4 class="text-center mb-3">Login Akun</h4>
 
-            <?php if (!empty($_SESSION['error'])): ?>
-                <div class="alert alert-danger">
-                    <?= htmlspecialchars($_SESSION['error'], ENT_QUOTES, 'UTF-8') ?>
-                    <?php unset($_SESSION['error']); ?>
+                        <?php if (!empty($_SESSION['error'])): ?>
+                            <div class="alert alert-danger"><?= $_SESSION['error'];
+                            unset($_SESSION['error']); ?></div>
+                        <?php endif; ?>
+                        <?php if (!empty($_SESSION['success'])): ?>
+                            <div class="alert alert-success"><?= $_SESSION['success'];
+                            unset($_SESSION['success']); ?></div>
+                        <?php endif; ?>
+
+                        <form method="POST" action="?page=login">
+                            <?= SecurityHelper::csrfInput(); ?>
+                            <div class="mb-3">
+                                <label>Email</label>
+                                <input type="email" name="email" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label>Password</label>
+                                <input type="password" name="password" class="form-control" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Masuk</button>
+                        </form>
+                        <div class="mt-3 text-center">
+                            <a href="?page=register">Belum punya akun?</a> |
+                            <a href="?page=auth_forgot">Lupa password?</a>
+                        </div>
+                    </div>
                 </div>
-            <?php endif; ?>
-
-            <?php if (!empty($_SESSION['success'])): ?>
-                <div class="alert alert-success">
-                    <?= htmlspecialchars($_SESSION['success'], ENT_QUOTES, 'UTF-8') ?>
-                    <?php unset($_SESSION['success']); ?>
-                </div>
-            <?php endif; ?>
-
-            <form method="post" action="?page=login">
-                <div class="form-group">
-                    <label class="form-label">Email</label>
-                    <input type="email" name="email" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input type="password" name="password" class="form-control" required>
-                </div>
-                <button type="submit" class="btn-primary">Masuk ke Ruang Rasa</button>
-            </form>
-
-            <div class="divider"></div>
-
-            <p class="text-center">
-                Belum punya akun?
-                <a href="?page=register" class="link">Daftar Sekarang</a>
-            </p>
+            </div>
         </div>
     </div>
-
-    <script src="<?= BASE_URL ?>/public/assets/js/ruang-rasa.js"></script>
 </body>
 
 </html>

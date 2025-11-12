@@ -1,6 +1,6 @@
 <?php
+// app/models/PasswordReset.php
 require_once __DIR__ . '/DB.php';
-
 class PasswordReset
 {
     private $db;
@@ -9,25 +9,29 @@ class PasswordReset
         $this->db = DB::getInstance();
     }
 
-    // simpan token reset password
     public function createToken($userId, $token, $type = 'reset')
     {
         $stmt = $this->db->prepare("
-            INSERT INTO password_resets (user_id, token, type, created_at)
-            VALUES (?, ?, ?, NOW())
-        ");
+        INSERT INTO password_resets (user_id, token, type, created_at)
+        VALUES (?, ?, ?, NOW())
+    ");
         $stmt->execute([$userId, $token, $type]);
+        return $this->db->lastInsertId();
     }
 
-    // cari token
-    public function findByToken($token)
+
+    public function findByToken($token, $type = null)
     {
-        $stmt = $this->db->prepare("SELECT * FROM password_resets WHERE token = ? LIMIT 1");
-        $stmt->execute([$token]);
+        if ($type) {
+            $stmt = $this->db->prepare("SELECT * FROM password_resets WHERE token = ? AND type = ?");
+            $stmt->execute([$token, $type]);
+        } else {
+            $stmt = $this->db->prepare("SELECT * FROM password_resets WHERE token = ?");
+            $stmt->execute([$token]);
+        }
         return $stmt->fetch();
     }
 
-    // hapus token setelah digunakan
     public function deleteToken($token)
     {
         $stmt = $this->db->prepare("DELETE FROM password_resets WHERE token = ?");

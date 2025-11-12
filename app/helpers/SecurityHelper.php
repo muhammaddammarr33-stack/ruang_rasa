@@ -28,7 +28,7 @@ class SecurityHelper
         return htmlspecialchars(trim($str), ENT_QUOTES, 'UTF-8');
     }
 
-    public static function genToken($len = 48)
+    public static function genToken($len = 24)
     {
         return bin2hex(random_bytes($len));
     }

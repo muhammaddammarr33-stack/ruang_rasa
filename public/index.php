@@ -1,6 +1,8 @@
 <?php
 // public/index.php
 require_once __DIR__ . '/../app/controllers/AuthController.php';
+require_once __DIR__ . '/../app/controllers/AuthVerifyController.php'; // ✅ tambah baris ini
+require_once __DIR__ . '/../app/controllers/ProfileController.php';
 require_once __DIR__ . '/../app/controllers/ProductController.php';
 require_once __DIR__ . '/../app/controllers/CategoryController.php';
 require_once __DIR__ . '/../app/controllers/CartController.php';
@@ -15,6 +17,7 @@ $page = $_GET['page'] ?? 'home';
 
 // controllers
 $auth = new AuthController();
+$profile = new ProfileController();
 $productCtrl = new ProductController();
 $categoryCtrl = new CategoryController();
 $cartCtrl = new CartController();
@@ -30,21 +33,54 @@ switch ($page) {
     case 'landing':
         $productCtrl->landing();
         break;
-    case 'login':
-        if ($_SERVER['REQUEST_METHOD'] === 'POST')
-            $auth->login();
-        else
-            $auth->showLogin();
-        break;
     case 'register':
         if ($_SERVER['REQUEST_METHOD'] === 'POST')
             $auth->register();
         else
             $auth->showRegister();
         break;
+
+    case 'login':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST')
+            $auth->login();
+        else
+            $auth->showLogin();
+        break;
+
     case 'logout':
         $auth->logout();
         break;
+
+    case 'auth_verify':
+        $controller = new AuthVerifyController();
+        $controller->verify();
+        break;
+
+    case 'auth_forgot':
+    case 'forgot':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST')
+            $auth->forgot();
+        else
+            $auth->showForgot();
+        break;
+
+    case 'auth_reset':
+    case 'reset':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST')
+            $auth->reset();
+        else
+            $auth->showReset();
+        break;
+
+    case 'profile':
+        $profile->index();
+        break;
+
+    case 'profile_update':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST')
+            $profile->update();
+        break;
+
     // admin
     case 'admin_dashboard':
         if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {

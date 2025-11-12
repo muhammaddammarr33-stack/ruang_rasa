@@ -1,7 +1,8 @@
 <?php
 
 
-define("BASE_URL",'http://localhost/ruang_rasa/');
+define("BASE_URL", 'http://localhost/ruang_rasa/public/');
+
 
 // config/database.php
 return [

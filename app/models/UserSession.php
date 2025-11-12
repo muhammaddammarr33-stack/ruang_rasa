@@ -1,7 +1,6 @@
 <?php
 // app/models/UserSession.php
 require_once __DIR__ . '/DB.php';
-
 class UserSession
 {
     private $db;
@@ -12,10 +11,7 @@ class UserSession
 
     public function create($userId, $token, $ip, $agent)
     {
-        $stmt = $this->db->prepare("
-            INSERT INTO user_sessions (user_id, session_token, ip_address, user_agent, last_activity)
-            VALUES (?, ?, ?, ?, NOW())
-        ");
+        $stmt = $this->db->prepare("INSERT INTO user_sessions (user_id, session_token, ip_address, user_agent, last_activity) VALUES (?, ?, ?, ?, NOW())");
         $stmt->execute([$userId, $token, $ip, $agent]);
     }
 
@@ -25,7 +21,7 @@ class UserSession
         $stmt->execute([$token]);
     }
 
-    public function purgeOld($minutes = 60)
+    public function purgeOld($minutes = 1440)
     {
         $stmt = $this->db->prepare("DELETE FROM user_sessions WHERE last_activity < DATE_SUB(NOW(), INTERVAL ? MINUTE)");
         $stmt->execute([$minutes]);
