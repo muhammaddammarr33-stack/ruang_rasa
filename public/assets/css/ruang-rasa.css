@@ -1,0 +1,162 @@
+/* public/assets/css/ruang-rasa.css */
+:root {
+  --off-white: #F5F5EC;
+  --soft-blue: #79A1BF;
+  --soft-terracotta: #E7A494;
+  --dark-grey: #343D46;
+  --light-grey: #EDEDED;
+  --border-radius: 16px;
+  --transition: all 0.25s ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--off-white);
+  font-family: 'Poppins', sans-serif;
+  color: var(--dark-grey);
+  margin: 0;
+  padding: 0;
+  line-height: 1.5;
+}
+
+.auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 1.5rem;
+}
+
+.auth-card {
+  background: white;
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-card h1 {
+  font-weight: 600;
+  font-size: 1.75rem;
+  margin-bottom: 0.5rem;
+  color: var(--dark-grey);
+  text-align: center;
+}
+
+.auth-card p.subtitle {
+  text-align: center;
+  color: #666;
+  font-size: 0.95rem;
+  margin-bottom: 1.75rem;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-label {
+  display: block;
+  font-weight: 500;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  color: var(--dark-grey);
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #dcdcdc;
+  border-radius: 12px;
+  background: white;
+  color: var(--dark-grey);
+  transition: var(--transition);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--soft-blue);
+  box-shadow: 0 0 0 3px rgba(121, 161, 191, 0.2);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 0.9rem;
+  background: var(--soft-blue);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-primary:hover {
+  background: #688da3;
+}
+
+.btn-primary:active {
+  transform: translateY(1px);
+}
+
+.alert {
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  margin-bottom: 1.25rem;
+  font-size: 0.95rem;
+}
+
+.alert-danger {
+  background: #ffe8e6;
+  color: #c62828;
+  border-left: 4px solid #f44336;
+}
+
+.divider {
+  height: 1px;
+  background: #eaeaea;
+  margin: 1.5rem 0;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.link {
+  color: var(--soft-blue);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 1.25rem;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+  .auth-card {
+    padding: 2.5rem;
+  }
+}
