@@ -1,57 +1,93 @@
-<?php
-require_once __DIR__ . '/../../models/DB.php';
-$db = DB::getInstance();
-
-$stats = [
-    'products' => $db->query("SELECT COUNT(*) FROM products")->fetchColumn(),
-    'categories' => $db->query("SELECT COUNT(*) FROM categories")->fetchColumn(),
-    'orders' => $db->query("SELECT COUNT(*) FROM orders")->fetchColumn(),
-    'consultations' => $db->query("SELECT COUNT(*) FROM consultations")->fetchColumn(),
-];
-?>
 <!doctype html>
 <html lang="id">
 
 <head>
     <meta charset="utf-8">
-    <title>Admin Dashboard</title>
+    <title>Dashboard Admin - Ruang Rasa</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
-<body>
-    <div class="container py-4">
-        <h2>Dashboard Admin</h2>
-        <p>Halo, <?= htmlspecialchars($_SESSION['user']['name']) ?>!</p>
-        <a href="?page=landing" class="btn btn-primary">Tampilan Landing</a>
-        <div class="row mt-4">
-            <div class="col-md-3">
-                <div class="card text-center p-3">
-                    <h5>Produk</h5>
-                    <p class="fs-4"><?= $stats['products'] ?></p>
-                    <a href="?page=admin_products" class="btn btn-primary btn-sm">Kelola</a>
+<body class="bg-light">
+    <div class="container-fluid py-4">
+        <h2 class="mb-4 text-center fw-bold">📊 Dashboard Admin</h2>
+
+        <div class="row g-3">
+            <div class="col-md-2">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <h5 class="fw-bold"><?= $totalProducts ?></h5>
+                        <p class="text-muted small">Kategori</p>
+                        <a href="?page=admin_categories" class="btn btn-sm btn-outline-primary">Kelola</a>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card text-center p-3">
-                    <h5>Kategori</h5>
-                    <p class="fs-4"><?= $stats['categories'] ?></p>
-                    <a href="?page=admin_categories" class="btn btn-primary btn-sm">Kelola</a>
+
+            <div class="col-md-2">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <h5 class="fw-bold"><?= $totalProducts ?></h5>
+                        <p class="text-muted small">Produk</p>
+                        <a href="?page=admin_products" class="btn btn-sm btn-outline-primary">Kelola</a>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card text-center p-3">
-                    <h5>Pesanan</h5>
-                    <p class="fs-4"><?= $stats['orders'] ?></p>
-                    <a href="?page=admin_orders" class="btn btn-warning btn-sm">Lihat</a>
+
+            <div class="col-md-2">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <h5 class="fw-bold"><?= $totalOrders ?></h5>
+                        <p class="text-muted small">Pesanan</p>
+                        <a href="?page=admin_orders" class="btn btn-sm btn-outline-primary">Lihat</a>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card text-center p-3">
-                    <h5>Konsultasi</h5>
-                    <p class="fs-4"><?= $stats['consultations'] ?></p>
-                    <a href="?page=admin_consultations" class="btn btn-success btn-sm">Pantau</a>
+
+            <div class="col-md-2">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <h5 class="fw-bold"><?= $totalPromos ?></h5>
+                        <p class="text-muted small">Promo Aktif</p>
+                        <a href="?page=admin_promotions" class="btn btn-sm btn-outline-primary">Kelola</a>
+                    </div>
                 </div>
             </div>
+
+            <div class="col-md-2">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <h5 class="fw-bold"><?= $totalConsult ?></h5>
+                        <p class="text-muted small">Konsultasi</p>
+                        <a href="?page=admin_consultations" class="btn btn-sm btn-outline-primary">Cek</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <h5 class="fw-bold"><?= $totalCustom ?></h5>
+                        <p class="text-muted small">Personalisasi</p>
+                        <a href="?page=admin_custom_orders" class="btn btn-sm btn-outline-primary">Lihat</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <h5 class="fw-bold"><?= $totalMembers ?></h5>
+                        <p class="text-muted small">Membership</p>
+                        <a href="?page=admin_memberships" class="btn btn-sm btn-outline-primary">Kelola</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="text-center">
+            <a href="?page=landing" class="btn btn-secondary">🏠 Kembali ke Halaman Utama</a>
+            <a href="?page=logout" class="btn btn-danger">🚪 Logout</a>
         </div>
     </div>
 </body>

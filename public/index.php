@@ -8,7 +8,7 @@ require_once __DIR__ . '/../app/controllers/CategoryController.php';
 require_once __DIR__ . '/../app/controllers/CartController.php';
 require_once __DIR__ . '/../app/controllers/ConsultationController.php';
 require_once __DIR__ . '/../app/controllers/CustomOrderController.php';
-// require_once __DIR__ . '/../app/controllers/PromotionController.php';
+require_once __DIR__ . '/../app/controllers/PromotionController.php';
 // require_once __DIR__ . '/../app/controllers/MembershipController.php';
 // require_once __DIR__ . '/../app/controllers/ReferralController.php';
 // require_once __DIR__ . '/../app/controllers/NewsletterController.php';
@@ -23,14 +23,14 @@ $categoryCtrl = new CategoryController();
 $cartCtrl = new CartController();
 $consultationCtrl = new ConsultationController();
 $customCtrl = new CustomOrderController();
-// $promoCtrl = new PromotionController();
+$promoCtrl = new PromotionController();
 // $memberCtrl = new MembershipController();
 // $refCtrl = new ReferralController();
 // $newsCtrl = new NewsletterController();
 
 switch ($page) {
-    case 'home':
     case 'landing':
+    case 'home':
         $productCtrl->landing();
         break;
     case 'register':
@@ -91,62 +91,76 @@ switch ($page) {
         break;
     // ...
     case 'admin_products':
-        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-            header("Location: ?page=login");
-            exit;
-        }
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $productCtrl->create();
-        } else {
-            $productCtrl->adminProducts();
-        }
+        $productCtrl->adminIndex();
         break;
-
     case 'admin_product_form':
-        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-            header("Location: ?page=login");
-            exit;
-        }
-        $productCtrl->createForm();
+        $productCtrl->form();
         break;
-
-    case 'admin_product_delete':
-        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-            header("Location: ?page=login");
-            exit;
-        }
-        $productCtrl->delete();
-        break;
-
-    case 'admin_product_edit':
-        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-            header("Location: ?page=login");
-            exit;
-        }
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $productCtrl->update();
-        } else {
-            $productCtrl->editForm();
-        }
-        break;
-
-    case 'admin_categories':
-        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-            header("Location: ?page=login");
-            exit;
-        }
-        $categoryCtrl->adminCategories();
-        break;
-
-    case 'admin_category_form':
+    case 'admin_product_store':
         if ($_SERVER['REQUEST_METHOD'] === 'POST')
-            $categoryCtrl->create();
-        else
-            $categoryCtrl->createForm();
+            $productCtrl->store();
+        break;
+    case 'admin_product_update':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST')
+            $productCtrl->update();
+        break;
+    case 'admin_product_delete':
+        $productCtrl->destroy();
+        break;
+    case 'admin_product_delete_image':
+        $productCtrl->deleteImage();
+        break;
+
+    // user product views
+    case 'products':
+        $productCtrl->list();
+        break;
+    case 'product_detail':
+        $productCtrl->show();
+        break;
+
+    // categories
+    case 'admin_categories':
+        $categoryCtrl->index();
+        break;
+    case 'admin_category_form':
+        $categoryCtrl->form();
+        break;
+    case 'admin_category_store':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST')
+            $categoryCtrl->store();
+        break;
+    case 'admin_category_update':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST')
+            $categoryCtrl->update();
         break;
     case 'admin_category_delete':
-        $categoryCtrl->delete();
+        $categoryCtrl->destroy();
         break;
+
+    // ==== PROMOSI (ADMIN) ====
+    case 'admin_promotions':
+        $promoCtrl->adminIndex();
+        break;
+
+    case 'admin_promo_form':
+        $promoCtrl->adminForm();
+        break;
+
+    case 'admin_promo_save':
+        $promoCtrl->adminSave();
+        break;
+
+    case 'admin_promo_delete':
+        $promoCtrl->adminDelete();
+        break;
+
+    // ==== PROMOSI (USER) ====
+    case 'promotions':
+        $promoCtrl->listPublic();
+        break;
+
+
     // ...
     case 'add_to_cart':
         $cartCtrl->add();
@@ -267,18 +281,18 @@ switch ($page) {
         include __DIR__ . '/../app/views/admin/consultation_detail.php';
         break;
 
-    case 'product_detail':
-        include __DIR__ . '/../app/views/products/detail.php';
-        break;
+    // case 'product_detail':
+    //     include __DIR__ . '/../app/views/products/detail.php';
+    //     break;
 
-    // Review setelah pembelian
-    case 'add_review_after_purchase':
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $productCtrl->addReviewAfterPurchase();
-        } else {
-            $productCtrl->reviewFormAfterPurchase();
-        }
-        break;
+    // // Review setelah pembelian
+    // case 'add_review_after_purchase':
+    //     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    //         $productCtrl->addReviewAfterPurchase();
+    //     } else {
+    //         $productCtrl->reviewFormAfterPurchase();
+    //     }
+    //     break;
 
     case 'custom_form':
         if (!isset($_SESSION['user'])) {

@@ -3,39 +3,60 @@
 require_once __DIR__ . '/../models/Category.php';
 class CategoryController
 {
-    private $categoryModel;
+    private $cat;
     public function __construct()
     {
-        $this->categoryModel = new Category();
+        $this->cat = new Category();
         if (session_status() === PHP_SESSION_NONE)
             session_start();
     }
 
-    public function adminCategories()
+    public function index()
     {
-        $categories = $this->categoryModel->all();
-        include __DIR__ . '/../views/admin/categories.php';
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            header("Location: ?page=login");
+            exit;
+        }
+        $categories = $this->cat->all();
+        include __DIR__ . '/../views/admin/categories/index.php';
     }
 
-    public function createForm()
+    public function form()
     {
-        include __DIR__ . '/../views/admin/category_form.php';
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            header("Location: ?page=login");
+            exit;
+        }
+        $cat = null;
+        if (isset($_GET['id']))
+            $cat = $this->cat->find((int) $_GET['id']);
+        include __DIR__ . '/../views/admin/categories/form.php';
     }
 
-    public function create()
+    public function store()
     {
-        $name = $_POST['name'];
-        $slug = strtolower(str_replace(' ', '-', $name));
-        $stmt = DB::getInstance()->prepare("INSERT INTO categories (name, slug) VALUES (?, ?)");
-        $stmt->execute([$name, $slug]);
+        $name = trim($_POST['name']);
+        $desc = trim($_POST['description'] ?? '');
+        $this->cat->create($name, $desc);
+        $_SESSION['success'] = "Kategori dibuat.";
         header("Location: ?page=admin_categories");
     }
 
-    public function delete()
+    public function update()
     {
-        $id = $_GET['id'];
-        DB::getInstance()->prepare("DELETE FROM categories WHERE id=?")->execute([$id]);
+        $id = (int) $_POST['id'];
+        $name = trim($_POST['name']);
+        $desc = trim($_POST['description'] ?? '');
+        $this->cat->update($id, $name, $desc);
+        $_SESSION['success'] = "Kategori diupdate.";
         header("Location: ?page=admin_categories");
     }
 
+    public function destroy()
+    {
+        $id = (int) $_GET['id'];
+        $this->cat->delete($id);
+        $_SESSION['success'] = "Kategori dihapus.";
+        header("Location: ?page=admin_categories");
+    }
 }

@@ -53,12 +53,12 @@ $ratingData = $avgStmt->fetch();
             <div class="col-md-6">
                 <?php if (!empty($images)): ?>
                     <div class="mb-3">
-                        <img src="../public/uploads/<?= htmlspecialchars($images[0]['image_path']) ?>"
+                        <img src="uploads/<?= htmlspecialchars($images[0]['image_path']) ?>"
                             class="img-fluid rounded shadow" alt="Produk">
                     </div>
                     <div class="d-flex flex-wrap gap-2">
                         <?php foreach ($images as $img): ?>
-                            <img src="../public/uploads/<?= htmlspecialchars($img['image_path']) ?>" width="80" height="80"
+                            <img src="uploads/<?= htmlspecialchars($img['image_path']) ?>" width="80" height="80"
                                 class="rounded border" style="object-fit:cover;">
                         <?php endforeach; ?>
                     </div>
@@ -105,7 +105,8 @@ $ratingData = $avgStmt->fetch();
 
         <?php if ($ratingData['total_reviews'] > 0): ?>
             <p>Rata-rata rating: <strong><?= $ratingData['avg_rating'] ?>/5</strong> dari
-                <?= $ratingData['total_reviews'] ?> ulasan</p>
+                <?= $ratingData['total_reviews'] ?> ulasan
+            </p>
         <?php else: ?>
             <p class="text-muted">Belum ada ulasan untuk produk ini.</p>
         <?php endif; ?>

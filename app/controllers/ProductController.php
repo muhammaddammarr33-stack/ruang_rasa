@@ -2,164 +2,267 @@
 // app/controllers/ProductController.php
 require_once __DIR__ . '/../models/Product.php';
 require_once __DIR__ . '/../models/Category.php';
+require_once __DIR__ . '/../models/Promotions.php'; // optional (kalau kamu mau badge promo)
 
 class ProductController
 {
-    private $productModel;
-    private $categoryModel;
+    private $product;
+    private $category;
+
     public function __construct()
     {
-        $this->productModel = new Product();
-        $this->categoryModel = new Category();
+        $this->product = new Product();
+        $this->category = new Category();
+
         if (session_status() === PHP_SESSION_NONE)
             session_start();
     }
 
+    /* =========================
+       🧩 ADMIN AREA
+    ========================== */
+
+    // 🟢 List semua produk di admin
+    public function adminIndex()
+    {
+        $this->authorizeAdmin();
+        $products = $this->product->all();
+        include __DIR__ . '/../views/admin/products/index.php';
+    }
+
+    // 🟢 Form tambah / edit produk
+    public function form()
+    {
+        $this->authorizeAdmin();
+        $categories = $this->category->all();
+        $product = null;
+        $images = [];
+
+        if (isset($_GET['id'])) {
+            $product = $this->product->find((int) $_GET['id']);
+            $images = $this->product->getImages((int) $_GET['id']);
+        }
+
+        include __DIR__ . '/../views/admin/products/form.php';
+    }
+
+    // 🟢 Simpan produk baru
+    public function store()
+    {
+        $this->authorizeAdmin();
+        try {
+            $name = trim($_POST['name']);
+            $description = trim($_POST['description'] ?? '');
+            $price = (float) $_POST['price'];
+            $stock = (int) ($_POST['stock'] ?? 0);
+            $category_id = $_POST['category_id'] ?: null;
+
+            $id = $this->product->create([
+                'category_id' => $category_id,
+                'name' => $name,
+                'description' => $description,
+                'price' => $price,
+                'discount' => 0,
+                'stock' => $stock,
+                'featured' => 0
+            ]);
+
+            /* 🔹 Upload gambar utama */
+            if (!empty($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                $filename = $this->handleUpload($_FILES['image']);
+                $this->product->addImage($id, $filename, 1); // is_main = 1
+            }
+
+            /* 🔹 Upload gambar galeri */
+            if (!empty($_FILES['gallery'])) {
+                foreach ($_FILES['gallery']['name'] as $k => $n) {
+                    if ($_FILES['gallery']['error'][$k] !== UPLOAD_ERR_OK)
+                        continue;
+                    $tmpFile = [
+                        'name' => $n,
+                        'tmp_name' => $_FILES['gallery']['tmp_name'][$k],
+                        'error' => $_FILES['gallery']['error'][$k]
+                    ];
+                    $filename = $this->handleUpload($tmpFile);
+                    $this->product->addImage($id, $filename, 0);
+                }
+            }
+
+            $_SESSION['success'] = "Produk berhasil ditambahkan.";
+            header("Location: ?page=admin_products");
+        } catch (Exception $e) {
+            $_SESSION['error'] = $e->getMessage();
+            header("Location: ?page=admin_product_form");
+        }
+    }
+
+    // 🟢 Update produk
+    public function update()
+    {
+        $this->authorizeAdmin();
+        try {
+            $id = (int) $_POST['id'];
+            $name = trim($_POST['name']);
+            $description = trim($_POST['description'] ?? '');
+            $price = (float) $_POST['price'];
+            $stock = (int) ($_POST['stock'] ?? 0);
+            $category_id = $_POST['category_id'] ?: null;
+
+            $this->product->update($id, [
+                'category_id' => $category_id,
+                'name' => $name,
+                'description' => $description,
+                'price' => $price,
+                'discount' => 0,
+                'stock' => $stock,
+                'featured' => 0
+            ]);
+
+            // upload gambar utama (jika baru)
+            if (!empty($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                $filename = $this->handleUpload($_FILES['image']);
+                $this->product->addImage($id, $filename, 1);
+            }
+
+            // upload galeri baru
+            if (!empty($_FILES['gallery'])) {
+                foreach ($_FILES['gallery']['name'] as $k => $n) {
+                    if ($_FILES['gallery']['error'][$k] !== UPLOAD_ERR_OK)
+                        continue;
+                    $tmpFile = [
+                        'name' => $n,
+                        'tmp_name' => $_FILES['gallery']['tmp_name'][$k],
+                        'error' => $_FILES['gallery']['error'][$k]
+                    ];
+                    $filename = $this->handleUpload($tmpFile);
+                    $this->product->addImage($id, $filename, 0);
+                }
+            }
+
+            $_SESSION['success'] = "Produk berhasil diupdate.";
+            header("Location: ?page=admin_products");
+        } catch (Exception $e) {
+            $_SESSION['error'] = $e->getMessage();
+            header("Location: ?page=admin_product_form&id=" . $_POST['id']);
+        }
+    }
+
+    // 🟢 Hapus produk
+    public function destroy()
+    {
+        $this->authorizeAdmin();
+        $id = (int) $_GET['id'];
+        $this->product->delete($id);
+        $_SESSION['success'] = "Produk berhasil dihapus.";
+        header("Location: ?page=admin_products");
+    }
+
+    // 🟢 Hapus gambar galeri
+    public function deleteImage()
+    {
+        $this->authorizeAdmin();
+        $imgId = (int) $_GET['img_id'];
+        $productId = (int) $_GET['product_id'];
+
+        // ambil filename untuk hapus file fisik
+        $images = $this->product->getImages($productId);
+        $fileToDelete = null;
+        foreach ($images as $img) {
+            if ($img['id'] == $imgId) {
+                $fileToDelete = $img['image_path'];
+                break;
+            }
+        }
+
+        $this->product->deleteImage($imgId);
+        if ($fileToDelete && file_exists(__DIR__ . '/../../public/uploads/' . $fileToDelete)) {
+            @unlink(__DIR__ . '/../../public/uploads/' . $fileToDelete);
+        }
+
+        $_SESSION['success'] = "Gambar berhasil dihapus.";
+        header("Location: ?page=admin_product_form&id=" . $productId);
+    }
+
+    /* =========================
+       🏠 USER AREA
+    ========================== */
+
+    // 🟢 Landing Page (home)
+    // app/controllers/ProductController.php
     public function landing()
     {
-        $search = $_GET['q'] ?? null;
-        $cat = $_GET['category'] ?? null;
-        $products = $this->productModel->all($search, $cat);
-        $categories = $this->categoryModel->all();
+        $productModel = $this->product;
+        $categoryModel = $this->category;
+        require_once __DIR__ . '/../models/Promotions.php';
+        $promoModel = new Promotions();
+        // ambil parameter search dan kategori dari URL
+        $keyword = $_GET['search'] ?? '';
+        $category = $_GET['category'] ?? '';
+        // ambil semua kategori
+        $categories = $categoryModel->all();
+        // ambil produk sesuai filter
+        $products = $productModel->filter($keyword, $category);
+        // tambahkan harga promo ke setiap produk
+        foreach ($products as &$p) {
+            $manualDiscount = !empty($p['discount']) ? (float) $p['discount'] : 0;
+            $promoDiscount = $promoModel->getBestDiscountForProduct($p['id']);
+            $finalDiscount = max($manualDiscount, $promoDiscount);
+
+            $p['final_discount'] = $finalDiscount;
+            $p['final_price'] = $p['price'] - ($p['price'] * $finalDiscount / 100);
+        }
+        // kirim semuanya ke view
         include __DIR__ . '/../views/landing/index.php';
     }
 
-    public function adminProducts()
+
+    // 🟢 Halaman semua produk (search + filter)
+    public function list()
     {
-        $products = $this->productModel->all();
-        include __DIR__ . '/../views/admin/products.php';
+        $keyword = $_GET['search'] ?? '';
+        $category = $_GET['category'] ?? '';
+        $categories = $this->category->all();
+        $products = $this->product->filter($keyword, $category);
+        include __DIR__ . '/../views/landing/products.php';
     }
 
-    public function createForm()
+    // 🟢 Detail produk
+    public function show()
     {
-        $categories = $this->categoryModel->all();
-        include __DIR__ . '/../views/admin/product_form.php';
-    }
-
-    public function create()
-    {
-        $data = [
-            'category_id' => $_POST['category_id'],
-            'name' => $_POST['name'],
-            'description' => $_POST['description'],
-            'price' => $_POST['price'],
-            'discount' => $_POST['discount'] ?? 0,
-            'stock' => $_POST['stock'] ?? 0,
-            'featured' => isset($_POST['featured']) ? 1 : 0
-        ];
-        $id = $this->productModel->create($data);
-
-        // upload file
-        if (!empty($_FILES['image']['name'])) {
-            $file = $_FILES['image'];
-            $allowed = ['image/jpeg', 'image/png'];
-            if (in_array($file['type'], $allowed) && $file['size'] <= 2 * 1024 * 1024) {
-                $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-                $filename = 'product_' . time() . '.' . $ext;
-                move_uploaded_file($file['tmp_name'], __DIR__ . '/../../public/uploads/' . $filename);
-                $this->productModel->saveImage($id, $filename, 1);
-            }
+        $id = (int) ($_GET['id'] ?? 0);
+        $p = $this->product->find($id);
+        if (!$p) {
+            echo "<div class='p-4'>Produk tidak ditemukan.</div>";
+            return;
         }
-        header("Location: ?page=admin_products");
+        $images = $this->product->getImages($id);
+        include __DIR__ . '/../views/landing/detail.php';
     }
 
-    public function delete()
+    /* =========================
+       🔧 UTILITIES
+    ========================== */
+
+    private function handleUpload($file)
     {
-        $id = $_GET['id'] ?? null;
-        if ($id)
-            $this->productModel->delete($id);
-        header("Location: ?page=admin_products");
+        $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, $allowed))
+            throw new Exception("Format file tidak didukung.");
+
+        $filename = time() . '_' . preg_replace('/[^a-z0-9\-_\.]/i', '_', $file['name']);
+        $dest = __DIR__ . '/../../public/uploads/' . $filename;
+        if (!move_uploaded_file($file['tmp_name'], $dest))
+            throw new Exception("Gagal memindahkan file upload.");
+
+        return $filename;
     }
 
-    public function editForm()
+    private function authorizeAdmin()
     {
-        $id = $_GET['id'] ?? null;
-        $product = $this->productModel->find($id);
-        $categories = $this->categoryModel->all();
-        include __DIR__ . '/../views/admin/product_edit.php';
-    }
-
-    public function update()
-    {
-        $id = $_POST['id'];
-        $data = [
-            'category_id' => $_POST['category_id'],
-            'name' => $_POST['name'],
-            'description' => $_POST['description'],
-            'price' => $_POST['price'],
-            'discount' => $_POST['discount'],
-            'stock' => $_POST['stock'],
-            'featured' => isset($_POST['featured']) ? 1 : 0
-        ];
-        $this->productModel->update($id, $data);
-
-        // upload file baru
-        if (!empty($_FILES['image']['name'])) {
-            $file = $_FILES['image'];
-            $allowed = ['image/jpeg', 'image/png'];
-            if (in_array($file['type'], $allowed) && $file['size'] <= 2 * 1024 * 1024) {
-                $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-                $filename = 'product_' . time() . '.' . $ext;
-                move_uploaded_file($file['tmp_name'], __DIR__ . '/../../public/uploads/' . $filename);
-                $this->productModel->saveImage($id, $filename, 1);
-            }
-        }
-        $_SESSION['success'] = "Produk berhasil diupdate!";
-        header("Location: ?page=admin_products");
-    }
-
-    public function reviewFormAfterPurchase()
-    {
-        if (!isset($_SESSION['user'])) {
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
             header("Location: ?page=login");
             exit;
         }
-
-        $productId = $_GET['product_id'] ?? null;
-        if (!$productId) {
-            header("Location: ?page=user_orders");
-            exit;
-        }
-
-        require_once __DIR__ . '/../models/DB.php';
-        $db = DB::getInstance();
-        $product = $db->prepare("SELECT * FROM products WHERE id = ?");
-        $product->execute([$productId]);
-        $product = $product->fetch();
-
-        include __DIR__ . '/../views/products/review_after_purchase.php';
     }
-
-    public function addReviewAfterPurchase()
-    {
-        if (!isset($_SESSION['user'])) {
-            header("Location: ?page=login");
-            exit;
-        }
-
-        require_once __DIR__ . '/../models/ProductReview.php';
-        $reviewModel = new ProductReview();
-
-        $productId = $_POST['product_id'];
-        $userId = $_SESSION['user']['id'];
-        $rating = $_POST['rating'];
-        $review = $_POST['review'];
-
-        // Cegah review ganda
-        $db = DB::getInstance();
-        $check = $db->prepare("SELECT COUNT(*) FROM product_reviews WHERE product_id = ? AND user_id = ?");
-        $check->execute([$productId, $userId]);
-        if ($check->fetchColumn() > 0) {
-            $_SESSION['error'] = "Anda sudah memberikan ulasan untuk produk ini.";
-            header("Location: ?page=user_orders");
-            exit;
-        }
-
-        $reviewModel->create($productId, $userId, $rating, $review);
-        $_SESSION['success'] = "Ulasan Anda berhasil disimpan!";
-        header("Location: ?page=user_orders");
-    }
-
-
-
 }
