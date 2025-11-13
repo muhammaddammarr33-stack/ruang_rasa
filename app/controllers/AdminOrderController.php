@@ -1,48 +1,57 @@
 <?php
-require_once __DIR__ . '/../models/DB.php';
+// app/controllers/AdminOrderController.php
+require_once __DIR__ . '/../models/Order.php';
+require_once __DIR__ . '/../models/Payment.php';
+require_once __DIR__ . '/../models/Shipping.php';
 
 class AdminOrderController
 {
-    public function updateStatus()
-    {
-        $db = DB::getInstance();
-        $id = $_POST['id'] ?? null;
-        $status = $_POST['order_status'] ?? null;
+    private $orderModel;
+    private $paymentModel;
+    private $shippingModel;
 
-        if (!$id || !$status) {
-            header("Location: ?page=admin_orders");
+    public function __construct()
+    {
+        if (session_status() === PHP_SESSION_NONE)
+            session_start();
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            header("Location: ?page=login");
             exit;
         }
-
-        $stmt = $db->prepare("UPDATE orders SET order_status = ? WHERE id = ?");
-        $stmt->execute([$status, $id]);
-
-        $_SESSION['success'] = "Status pesanan #$id berhasil diubah menjadi '$status'.";
-        header("Location: ?page=admin_orders");
+        $this->orderModel = new Order();
+        $this->paymentModel = new Payment();
+        $this->shippingModel = new Shipping();
     }
 
-    public function showReviews()
+    public function index()
     {
-        $db = DB::getInstance();
-        $orderId = $_GET['id'] ?? null;
+        $orders = $this->orderModel->all(); // implement all() in model if needed
+        include __DIR__ . '/../views/admin/orders/index.php';
+    }
 
-        if (!$orderId) {
-            header("Location: ?page=admin_orders");
+    public function detail()
+    {
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            header("Location: ?page=login");
             exit;
         }
 
-        // Ambil produk dalam order beserta review-nya
-        $stmt = $db->prepare("
-            SELECT p.id AS product_id, p.name AS product_name, r.rating, r.review, u.name AS reviewer
-            FROM order_items oi
-            JOIN products p ON oi.product_id = p.id
-            LEFT JOIN product_reviews r ON r.product_id = p.id
-            LEFT JOIN users u ON r.user_id = u.id
-            WHERE oi.order_id = ?
-        ");
-        $stmt->execute([$orderId]);
-        $reviews = $stmt->fetchAll();
+        $id = $_GET['id'] ?? 0;
+        $order = $this->orderModel->find($id);
+        $items = $this->orderModel->getItems($id);
+        $payment = $this->orderModel->getPayment($id);
+        $shipping = $this->orderModel->getShipping($id);
 
-        include __DIR__ . '/../views/admin/order_reviews.php';
+        include __DIR__ . '/../views/admin/orders/detail.php';
+    }
+
+
+    public function updateStatus()
+    {
+        $id = $_POST['order_id'];
+        $status = $_POST['status'];
+        $this->orderModel->updateStatus($id, $status);
+        $_SESSION['success'] = "Status pesanan diperbarui.";
+        header("Location: ?page=admin_order_detail&id=$id");
     }
 }

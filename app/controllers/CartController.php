@@ -1,17 +1,12 @@
 <?php
-// app/controllers/CartController.php
 require_once __DIR__ . '/../models/Product.php';
-require_once __DIR__ . '/../models/Order.php';
 
 class CartController
 {
     private $productModel;
-    private $orderModel;
-
     public function __construct()
     {
         $this->productModel = new Product();
-        $this->orderModel = new Order();
         if (session_status() === PHP_SESSION_NONE)
             session_start();
         if (!isset($_SESSION['cart']))
@@ -23,12 +18,10 @@ class CartController
         $id = $_POST['id'] ?? null;
         if (!$id)
             return header('Location: ?page=landing');
-        if (!isset($_SESSION['user']))
-            return header('Location: ?page=login');
-
         $product = $this->productModel->find($id);
-        if (!$product)
-            return;
+        $priceData = $this->productModel->getFinalPrice($id);
+        $finalPrice = $priceData['final_price'];
+        $discountPercent = $priceData['discount_percent'];
 
         if (isset($_SESSION['cart'][$id])) {
             $_SESSION['cart'][$id]['qty']++;
@@ -36,11 +29,11 @@ class CartController
             $_SESSION['cart'][$id] = [
                 'id' => $product['id'],
                 'name' => $product['name'],
-                'price' => $product['price'],
+                'price' => $finalPrice,
+                'discount_percent' => $discountPercent,
                 'qty' => 1
             ];
         }
-
         header('Location: ?page=cart');
     }
 
@@ -57,51 +50,26 @@ class CartController
         header('Location: ?page=cart');
     }
 
-    public function checkoutForm()
+    public function update()
     {
-        if (!isset($_SESSION['user']))
-            return header('Location: ?page=login');
-        $cart = $_SESSION['cart'];
-        include __DIR__ . '/../views/cart/checkout.php';
-    }
-
-    public function checkout()
-    {
-        $user = $_SESSION['user'];
-        $cart = $_SESSION['cart'];
-        if (empty($cart)) {
-            $_SESSION['error'] = "Keranjang kosong.";
-            header('Location: ?page=cart');
-            return;
+        if (session_status() === PHP_SESSION_NONE)
+            session_start();
+        if (!isset($_SESSION['cart']) || empty($_POST['qty'])) {
+            $_SESSION['error'] = "Tidak ada data untuk diperbarui.";
+            header("Location: ?page=cart");
+            exit;
         }
 
-        // pastikan ini ada di CartController::checkout()
-        $total = 0;
-        foreach ($cart as $it) {
-            $total += ($it['price'] * $it['qty']);
-        }
-
-        $data = [
-            'user_id' => $user['id'],
-            'total_amount' => $total,
-            'payment_method' => $_POST['payment_method'],          // 'cod'|'transfer'|'ewallet'|'gateway'
-            'shipping_address' => $_POST['shipping_address'] ?? '' // gunakan nama shipping_address
-        ];
-
-        $orderId = $this->orderModel->create($data, $cart);
-
-        // 🔹 Hubungkan custom order dengan order_id baru
-        require_once __DIR__ . '/../models/CustomOrder.php';
-        $customModel = new CustomOrder();
-
-        foreach ($_SESSION['cart'] as $item) {
-            if (isset($item['custom_id'])) {
-                $customModel->linkToOrder($item['custom_id'], $orderId);
+        foreach ($_POST['qty'] as $index => $qty) {
+            $qty = max(1, (int) $qty);
+            if (isset($_SESSION['cart'][$index])) {
+                $_SESSION['cart'][$index]['qty'] = $qty;
             }
         }
 
-        unset($_SESSION['cart']);
-        $_SESSION['success'] = "Pesanan berhasil dibuat! ID Pesanan: $orderId";
-        header('Location: ?page=cart');
+        $_SESSION['success'] = "Jumlah item berhasil diperbarui.";
+        header("Location: ?page=cart");
+        exit;
     }
+
 }

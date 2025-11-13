@@ -233,6 +233,7 @@ $user = $_SESSION['user'] ?? null;
                         <b><?= htmlspecialchars($user['name'] ?? 'Sayang') ?></b></span>
                     <a href="?page=promotions" class="btn btn-outline-secondary btn-sm me-1">🔥 Lihat Promo Spesial</a>
                     <a href="?page=profile" class="btn btn-outline-secondary btn-sm me-1">Profil</a>
+                    <a href="?page=orders" class="btn btn-outline-secondary btn-sm me-1">Riwayat Pesanan</a>
                     <a href="?page=cart" class="btn btn-outline-secondary btn-sm me-1">
                         <i class="fas fa-shopping-cart"></i>
                     </a>
@@ -248,15 +249,69 @@ $user = $_SESSION['user'] ?? null;
         </div>
     </nav>
 
-    <!-- 🔹 Hero Section -->
-    <section class="hero">
+    <!-- 🔹 Hero Section dengan Video Interaktif -->
+    <section class="hero py-5" style="background: var(--off-white);">
         <div class="container">
-            <h1>Kirim Kejutan Hangat untuk Pasangan LDR-mu 💞</h1>
-            <p class="lead">Kado personal, surat digital, hitung mundur anniversary – semua dalam satu tempat yang penuh
-                rasa.</p>
-            <a href="?page=products" class="btn btn-special">Jelajahi Kado Spesial</a>
+            <div class="text-center mb-5">
+                <h1 class="mb-3">Kirim Kejutan Hangat untuk Pasangan LDR-mu 💞</h1>
+                <p class="lead text-muted">
+                    Kado personal, surat digital, hitung mundur anniversary – semua dalam satu tempat yang penuh rasa.
+                </p>
+            </div>
+
+            <!-- Video Utama -->
+            <div class="d-flex justify-content-center mb-4">
+                <div class="rounded-4 overflow-hidden shadow-lg"
+                    style="max-width: 640px; width: 100%; background: #000;">
+                    <video id="mainVideo" width="100%" height="auto" controls playsinline
+                        poster="videos/poster-hero.jpg" style="aspect-ratio: 16 / 9; display: block;">
+                        <source src="videos/hero-1.mp4" type="video/mp4">
+                        Browser Anda tidak mendukung pemutar video.
+                    </video>
+                </div>
+            </div>
+
+            <!-- Thumbnail Video -->
+            <div class="d-flex justify-content-center gap-3 flex-wrap mt-4">
+                <?php
+                $videos = [
+                    ['src' => 'videos/hero-1.mp4', 'title' => 'Cerita dari Hati'],
+                    ['src' => 'videos/hero-2.mp4', 'title' => 'Surat Digital untuk Pasangan'],
+                    ['src' => 'videos/hero-3.mp4', 'title' => 'Unboxing Paket Anniversary'],
+                    ['src' => 'videos/hero-4.mp4', 'title' => 'Cara Personalisasi Kado']
+                ];
+                foreach ($videos as $vid):
+                    ?>
+                    <button type="button" class="btn rounded-3 p-0 border"
+                        style="width: 96px; height: 64px; overflow: hidden; background: #fff;"
+                        title="<?= htmlspecialchars($vid['title']) ?>"
+                        onclick="changeVideo('<?= htmlspecialchars($vid['src']) ?>')"
+                        aria-label="Putar video: <?= htmlspecialchars($vid['title']) ?>">
+                        <video muted preload="none" style="width: 100%; height: 100%; object-fit: cover;">
+                            <source src="<?= htmlspecialchars($vid['src']) ?>" type="video/mp4">
+                        </video>
+                    </button>
+                <?php endforeach; ?>
+            </div>
+
+            <div class="text-center mt-5">
+                <a href="?page=products" class="btn btn-special">Jelajahi Kado Spesial</a>
+            </div>
         </div>
     </section>
+
+    <script>
+        function changeVideo(src) {
+            const mainVideo = document.getElementById('mainVideo');
+            if (mainVideo) {
+                mainVideo.src = src;
+                mainVideo.load();
+                mainVideo.play().catch(e => {
+                    console.log("Gagal autoplay:", e);
+                });
+            }
+        }
+    </script>
 
     <!-- 🔹 Fitur LDR (Value Proposition) -->
     <section class="py-5">
@@ -303,29 +358,18 @@ $user = $_SESSION['user'] ?? null;
                                 <div class="card-body d-flex flex-column">
                                     <h6 class="card-title"><?= htmlspecialchars($p['name']) ?></h6>
                                     <p class="text-muted small mb-1"><?= htmlspecialchars($p['category_name'] ?? '-') ?></p>
-                                    <?php
-                                    // gabungkan diskon bawaan produk + promosi aktif
-                                    $manualDiscount = !empty($p['discount']) ? (float) $p['discount'] : 0;
-                                    $promoDiscount = !empty($p['promo_discount']) ? (float) $p['promo_discount'] : 0;
-                                    $bestDiscount = max($manualDiscount, $promoDiscount);
-
-                                    $hasDiscount = $bestDiscount > 0;
-                                    $finalPrice = $hasDiscount
-                                        ? $p['price'] - ($p['price'] * $bestDiscount / 100)
-                                        : $p['price'];
-                                    ?>
                                     <p class="price mb-2">
-                                        <?php if ($hasDiscount): ?>
+                                        <?php if (!empty($p['discount_percent']) && $p['discount_percent'] > 0): ?>
                                             <span class="text-muted text-decoration-line-through">
-                                                Rp <?= number_format($p['price'], 0, ',', '.') ?>
+                                                Rp <?= number_format($p['base_price'], 0, ',', '.') ?>
                                             </span>
-                                            <span class="badge bg-danger ms-1">-<?= $bestDiscount ?>%</span><br>
+                                            <span class="badge bg-danger ms-1">-<?= $p['discount_percent'] ?>%</span><br>
                                             <span class="fw-bold text-primary fs-6">
-                                                Rp <?= number_format($finalPrice, 0, ',', '.') ?>
+                                                Rp <?= number_format($p['final_price'], 0, ',', '.') ?>
                                             </span>
                                         <?php else: ?>
                                             <span class="fw-bold text-primary fs-6">
-                                                Rp <?= number_format($p['price'], 0, ',', '.') ?>
+                                                Rp <?= number_format($p['final_price'], 0, ',', '.') ?>
                                             </span>
                                         <?php endif; ?>
                                     </p>

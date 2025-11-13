@@ -182,33 +182,21 @@
                 <!-- Info Produk -->
                 <div class="col-md-6 p-4">
                     <h1 class="product-title"><?= htmlspecialchars($p['name']) ?></h1>
-                    <?php
-                    // gabungkan diskon bawaan produk + promosi aktif
-                    $manualDiscount = !empty($p['discount']) ? (float) $p['discount'] : 0;
-                    $promoDiscount = !empty($p['promo_discount']) ? (float) $p['promo_discount'] : 0;
-                    $bestDiscount = max($manualDiscount, $promoDiscount);
-
-                    $hasDiscount = $bestDiscount > 0;
-                    $finalPrice = $hasDiscount
-                        ? $p['price'] - ($p['price'] * $bestDiscount / 100)
-                        : $p['price'];
-                    ?>
-                    <p class="product-price">
-                        <?php if ($hasDiscount): ?>
+                    <p class="price mb-2">
+                        <?php if (!empty($p['discount_percent']) && $p['discount_percent'] > 0): ?>
                             <span class="text-muted text-decoration-line-through">
-                                Rp <?= number_format($p['price'], 0, ',', '.') ?>
+                                Rp <?= number_format($p['base_price'], 0, ',', '.') ?>
                             </span>
-                            <span class="badge bg-danger ms-1">-<?= $bestDiscount ?>%</span><br>
+                            <span class="badge bg-danger ms-1">-<?= $p['discount_percent'] ?>%</span><br>
                             <span class="fw-bold text-primary fs-6">
-                                Rp <?= number_format($finalPrice, 0, ',', '.') ?>
+                                Rp <?= number_format($p['final_price'], 0, ',', '.') ?>
                             </span>
                         <?php else: ?>
                             <span class="fw-bold text-primary fs-6">
-                                Rp <?= number_format($p['price'], 0, ',', '.') ?>
+                                Rp <?= number_format($p['final_price'], 0, ',', '.') ?>
                             </span>
                         <?php endif; ?>
                     </p>
-
                     <?php if ($p['stock'] > 0): ?>
                         <p class="stock-info"><i class="fas fa-check-circle"></i> Tersedia (<?= $p['stock'] ?> stok)</p>
                     <?php else: ?>

@@ -1,7 +1,6 @@
 <?php
-// app/models/Order.php
 require_once __DIR__ . '/DB.php';
-require_once __DIR__ . '/Payment.php';
+
 class Order
 {
     private $db;
@@ -10,85 +9,128 @@ class Order
         $this->db = DB::getInstance();
     }
 
-    /**
-     * $data expected keys:
-     * - user_id (int)
-     * - total_amount (float)
-     * - payment_method (string) -> one of ('cod','transfer','ewallet','gateway')
-     * - shipping_address (string)
-     *
-     * $cart: array of items each with keys: id, name, price, qty
-     *
-     * Returns inserted order id on success.
-     */
-    public function create(array $data, array $cart)
+    public function create($data, $cart)
     {
-        $this->db->beginTransaction();
         try {
-            // 1) Insert ke tabel orders (sesuai schema yang kamu kirim)
+            $this->db->beginTransaction();
+
             $stmt = $this->db->prepare("
-                INSERT INTO orders
-                  (user_id, total_amount, payment_method, payment_status, order_status, shipping_address, tracking_number, created_at)
-                VALUES
-                  (?, ?, ?, 'pending', 'waiting', ?, NULL, ?)
+                INSERT INTO orders (user_id, total_amount, payment_method, payment_status, order_status, shipping_address, created_at)
+                VALUES (?, ?, ?, 'pending', 'waiting', ?, NOW())
             ");
-            $now = date('Y-m-d H:i:s');
             $stmt->execute([
                 $data['user_id'],
                 $data['total_amount'],
                 $data['payment_method'],
-                $data['shipping_address'],
-                $now
+                $data['shipping_address']
             ]);
             $orderId = $this->db->lastInsertId();
 
-            // 2️⃣ Insert order_items (dengan subtotal)
+            // insert order_items
             $stmtItem = $this->db->prepare("
-    INSERT INTO order_items (order_id, product_id, quantity, price, subtotal)
-    VALUES (?, ?, ?, ?, ?)
-");
+                INSERT INTO order_items (order_id, product_id, quantity, price, subtotal)
+                VALUES (?, ?, ?, ?, ?)
+            ");
             foreach ($cart as $item) {
-                $subtotal = $item['price'] * $item['qty'];
-                $stmtItem->execute([
-                    $orderId,
-                    $item['id'],
-                    $item['qty'],
-                    $item['price'],
-                    $subtotal
-                ]);
+                $finalPrice = isset($item['discount'])
+                    ? $item['price'] - ($item['price'] * $item['discount'] / 100)
+                    : $item['price'];
+
+                $subtotal = $finalPrice * $item['qty'];
+                $stmtItem->execute([$orderId, $item['id'], $item['qty'], $finalPrice, $subtotal]);
             }
-
-            /* 🟢 === Tambahkan di sini (tepat setelah loop order_items) === */
-
-            // Panggil model Payment
-            $paymentModel = new Payment();
-
-            // Simpan data pembayaran
-            $paymentModel->create(
-                $orderId,
-                $data['payment_method'],
-                $data['total_amount'],
-                'success',
-                ['note' => 'Simulasi pembayaran otomatis']
-            );
-
-            // Update status order setelah pembayaran berhasil
-            $this->db->prepare("
-                UPDATE orders
-                SET payment_status = 'paid',
-                    order_status = 'processing'
-                WHERE id = ?
-            ")->execute([$orderId]);
-
-            /* 🟢 === Setelah ini lanjut ke commit seperti biasa === */
 
             $this->db->commit();
             return $orderId;
-
         } catch (Exception $e) {
             $this->db->rollBack();
-            error_log("Order::create error: " . $e->getMessage());
             throw $e;
         }
     }
+
+    public function getAllByUser($userId)
+    {
+        $stmt = $this->db->prepare("SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC");
+        $stmt->execute([$userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getDetail($orderId)
+    {
+        $stmt = $this->db->prepare("
+            SELECT o.*, p.status AS payment_status_real, s.status AS shipping_status
+            FROM orders o
+            LEFT JOIN payments p ON o.id = p.order_id
+            LEFT JOIN shippings s ON o.id = s.order_id
+            WHERE o.id = ?
+        ");
+        $stmt->execute([$orderId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getItems($orderId)
+    {
+        $sql = "
+        SELECT 
+            oi.*, 
+            p.name AS product_name, 
+            p.price AS original_price,
+            pi.image_path AS image
+        FROM order_items oi
+        LEFT JOIN products p ON oi.product_id = p.id
+        LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.is_main = 1
+        WHERE oi.order_id = ?
+    ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$orderId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+    public function all()
+    {
+        $sql = "SELECT o.*, u.name AS user_name
+            FROM orders o
+            LEFT JOIN users u ON o.user_id = u.id
+            ORDER BY o.created_at DESC";
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getByUser($userId)
+    {
+        $sql = "SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function find($id)
+    {
+        $sql = "SELECT o.*, u.name AS user_name, u.email AS user_email
+            FROM orders o
+            LEFT JOIN users u ON o.user_id = u.id
+            WHERE o.id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getPayment($orderId)
+    {
+        $sql = "SELECT * FROM payments WHERE order_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$orderId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getShipping($orderId)
+    {
+        $sql = "SELECT * FROM shippings WHERE order_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$orderId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+
 }

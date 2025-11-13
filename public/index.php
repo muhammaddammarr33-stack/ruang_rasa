@@ -160,31 +160,76 @@ switch ($page) {
         $promoCtrl->listPublic();
         break;
 
-
-    // ...
-    case 'add_to_cart':
-        $cartCtrl->add();
-        break;
+    // Cart
     case 'cart':
-        $cartCtrl->index();
+        require_once __DIR__ . '/../app/controllers/CartController.php';
+        (new CartController())->index();
+        break;
+    case 'add_to_cart':
+        require_once __DIR__ . '/../app/controllers/CartController.php';
+        (new CartController())->add();
         break;
     case 'remove_from_cart':
-        $cartCtrl->remove();
+        require_once __DIR__ . '/../app/controllers/CartController.php';
+        (new CartController())->remove();
         break;
-    case 'checkout':
-        if ($_SERVER['REQUEST_METHOD'] === 'POST')
-            $cartCtrl->checkout();
-        else
-            $cartCtrl->checkoutForm();
+    case 'cart_update':
+        require_once __DIR__ . '/../app/controllers/CartController.php';
+        (new CartController())->update(); // optional if you implement qty update
         break;
 
-    case 'admin_orders':
-        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-            header("Location: ?page=login");
-            exit;
-        }
-        include __DIR__ . '/../app/views/admin/orders.php';
+    // Checkout
+    case 'checkout':
+        require_once __DIR__ . '/../app/controllers/CheckoutController.php';
+        (new CheckoutController())->form();
         break;
+    case 'checkout_process':
+        require_once __DIR__ . '/../app/controllers/CheckoutController.php';
+        (new CheckoutController())->process();
+        break;
+    case 'checkout_success':
+        require_once __DIR__ . '/../app/controllers/CheckoutController.php';
+        (new CheckoutController())->success();
+        break;
+
+    // Admin orders
+    case 'admin_orders':
+        require_once __DIR__ . '/../app/controllers/AdminOrderController.php';
+        (new AdminOrderController())->index();
+        break;
+    case 'admin_order_detail':
+        require_once __DIR__ . '/../app/controllers/AdminOrderController.php';
+        (new AdminOrderController())->detail();
+        break;
+    case 'admin_order_update_status':
+        require_once __DIR__ . '/../app/controllers/AdminOrderController.php';
+        (new AdminOrderController())->updateStatus();
+        break;
+
+    // user orders
+    case 'orders':
+        require_once '../app/controllers/OrderController.php';
+        $controller = new OrderController();
+        $controller->history();
+        break;
+
+    case 'order_detail':
+        require_once '../app/controllers/OrderController.php';
+        $controller = new OrderController();
+        $controller->detail();
+        break;
+
+    // ===================== ORDER CONTROLLER =====================
+    case 'order_history':
+        require_once __DIR__ . '/../app/controllers/OrderController.php';
+        $controller = new OrderController();
+        $controller->history();
+        break;
+
+
+
+    // ...
+
 
     case 'admin_update_order_status':
         if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
@@ -194,16 +239,6 @@ switch ($page) {
         require_once __DIR__ . '/../app/controllers/AdminOrderController.php';
         $ctrl = new AdminOrderController();
         $ctrl->updateStatus();
-        break;
-
-    case 'admin_order_reviews':
-        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-            header("Location: ?page=login");
-            exit;
-        }
-        require_once __DIR__ . '/../app/controllers/AdminOrderController.php';
-        $ctrl = new AdminOrderController();
-        $ctrl->showReviews();
         break;
 
 
@@ -319,14 +354,6 @@ switch ($page) {
             exit;
         }
         $customCtrl->detail();
-        break;
-
-    case 'admin_order_detail':
-        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-            header("Location: ?page=login");
-            exit;
-        }
-        include __DIR__ . '/../app/views/admin/order_detail.php';
         break;
 
     // case 'promotions':

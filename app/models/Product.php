@@ -163,4 +163,46 @@ class Product
         $stmt = $this->db->prepare("DELETE FROM product_images WHERE id = ?");
         return $stmt->execute([$id]);
     }
+
+    public function reduceStock($productId, $qty)
+    {
+        $stmt = $this->db->prepare("UPDATE products SET stock = GREATEST(stock - ?, 0) WHERE id = ?");
+        $stmt->execute([$qty, $productId]);
+    }
+
+    public function getFinalPrice($productId)
+    {
+        // Ambil data produk
+        $stmt = $this->db->prepare("
+        SELECT id, price, discount FROM products WHERE id = ?
+    ");
+        $stmt->execute([$productId]);
+        $p = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$p)
+            return 0;
+
+        $basePrice = (float) $p['price'];
+        $productDiscount = (float) ($p['discount'] ?? 0);
+
+        // Ambil diskon dari promosi aktif
+        require_once __DIR__ . '/Promotions.php';
+        $promoModel = new Promotions();
+        $promoDiscount = (float) $promoModel->getBestDiscountForProduct($productId);
+
+        // Pilih diskon terbesar
+        $finalDiscount = max($productDiscount, $promoDiscount);
+
+        // Hitung harga akhir
+        $finalPrice = $basePrice - ($basePrice * $finalDiscount / 100);
+
+        // Kembalikan semua data biar fleksibel
+        return [
+            'base_price' => $basePrice,
+            'discount_percent' => $finalDiscount,
+            'final_price' => $finalPrice
+        ];
+    }
+
+
 }

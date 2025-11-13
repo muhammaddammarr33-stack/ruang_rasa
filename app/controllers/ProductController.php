@@ -201,17 +201,18 @@ class ProductController
         // ambil semua kategori
         $categories = $categoryModel->all();
         // ambil produk sesuai filter
-        $products = $productModel->filter($keyword, $category);
-        // tambahkan harga promo ke setiap produk
-        foreach ($products as &$p) {
-            $manualDiscount = !empty($p['discount']) ? (float) $p['discount'] : 0;
-            $promoDiscount = $promoModel->getBestDiscountForProduct($p['id']);
-            $finalDiscount = max($manualDiscount, $promoDiscount);
+        $rawProducts = $productModel->filter($keyword, $category);
+        $products = [];
 
-            $p['final_discount'] = $finalDiscount;
-            $p['final_price'] = $p['price'] - ($p['price'] * $finalDiscount / 100);
+        // Tambahkan logika final price ke setiap produk
+        foreach ($rawProducts as $p) {
+            $priceData = $productModel->getFinalPrice($p['id']);
+            $p['final_price'] = $priceData['final_price'];
+            $p['discount_percent'] = $priceData['discount_percent'];
+            $p['base_price'] = $priceData['base_price'];
+            $products[] = $p;
         }
-        // kirim semuanya ke view
+
         include __DIR__ . '/../views/landing/index.php';
     }
 
@@ -222,7 +223,20 @@ class ProductController
         $keyword = $_GET['search'] ?? '';
         $category = $_GET['category'] ?? '';
         $categories = $this->category->all();
-        $products = $this->product->filter($keyword, $category);
+
+        // Ambil data mentah
+        $rawProducts = $this->product->filter($keyword, $category);
+        $products = [];
+
+        // Tambahkan logika diskon final ke setiap produk
+        foreach ($rawProducts as $p) {
+            $priceData = $this->product->getFinalPrice($p['id']);
+            $p['final_price'] = $priceData['final_price'];
+            $p['discount_percent'] = $priceData['discount_percent'];
+            $p['base_price'] = $priceData['base_price'];
+            $products[] = $p;
+        }
+
         include __DIR__ . '/../views/landing/products.php';
     }
 
@@ -232,9 +246,15 @@ class ProductController
         $id = (int) ($_GET['id'] ?? 0);
         $p = $this->product->find($id);
         if (!$p) {
-            echo "<div class='p-4'>Produk tidak ditemukan.</div>";
+            echo "Produk tidak ditemukan.";
             return;
         }
+
+        $priceData = $this->product->getFinalPrice($id);
+        $p['final_price'] = $priceData['final_price'];
+        $p['discount_percent'] = $priceData['discount_percent'];
+        $p['base_price'] = $priceData['base_price'];
+
         $images = $this->product->getImages($id);
         include __DIR__ . '/../views/landing/detail.php';
     }

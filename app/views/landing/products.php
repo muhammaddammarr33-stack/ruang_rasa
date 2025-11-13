@@ -72,33 +72,21 @@
                             <div class="card-body d-flex flex-column">
                                 <h6 class="card-title mb-1"><?= htmlspecialchars($p['name']) ?></h6>
                                 <p class="text-muted small mb-1"><?= htmlspecialchars($p['category_name'] ?? '-') ?></p>
-                                <?php
-                                // gabungkan diskon bawaan produk + promosi aktif
-                                $manualDiscount = !empty($p['discount']) ? (float) $p['discount'] : 0;
-                                $promoDiscount = !empty($p['promo_discount']) ? (float) $p['promo_discount'] : 0;
-                                $bestDiscount = max($manualDiscount, $promoDiscount);
-
-                                $hasDiscount = $bestDiscount > 0;
-                                $finalPrice = $hasDiscount
-                                    ? $p['price'] - ($p['price'] * $bestDiscount / 100)
-                                    : $p['price'];
-                                ?>
                                 <p class="price mb-2">
-                                    <?php if ($hasDiscount): ?>
+                                    <?php if (!empty($p['discount_percent']) && $p['discount_percent'] > 0): ?>
                                         <span class="text-muted text-decoration-line-through">
-                                            Rp <?= number_format($p['price'], 0, ',', '.') ?>
+                                            Rp <?= number_format($p['base_price'], 0, ',', '.') ?>
                                         </span>
-                                        <span class="badge bg-danger ms-1">-<?= $bestDiscount ?>%</span><br>
+                                        <span class="badge bg-danger ms-1">-<?= $p['discount_percent'] ?>%</span><br>
                                         <span class="fw-bold text-primary fs-6">
-                                            Rp <?= number_format($finalPrice, 0, ',', '.') ?>
+                                            Rp <?= number_format($p['final_price'], 0, ',', '.') ?>
                                         </span>
                                     <?php else: ?>
                                         <span class="fw-bold text-primary fs-6">
-                                            Rp <?= number_format($p['price'], 0, ',', '.') ?>
+                                            Rp <?= number_format($p['final_price'], 0, ',', '.') ?>
                                         </span>
                                     <?php endif; ?>
                                 </p>
-
                                 <div class="mt-auto">
                                     <a href="?page=product_detail&id=<?= $p['id'] ?>"
                                         class="btn btn-outline-primary btn-sm w-100 mb-1">Lihat</a>
