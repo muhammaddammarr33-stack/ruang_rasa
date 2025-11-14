@@ -31,7 +31,6 @@
 
         .reset-card {
             border-radius: 18px;
-            border: none;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
             background: white;
             padding: 2.25rem 2rem;
@@ -39,14 +38,15 @@
             width: 100%;
         }
 
-        .reset-card h4 {
+        .reset-card h1 {
             font-weight: 600;
-            margin-bottom: 1rem;
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
             color: var(--dark-grey);
         }
 
         .reset-card p.subtitle {
-            font-size: 0.95rem;
+            font-size: 1rem;
             color: var(--dark-grey);
             opacity: 0.85;
             margin-bottom: 1.5rem;
@@ -100,6 +100,7 @@
             border-radius: 12px;
             padding: 0.85rem 1rem;
             font-size: 0.95rem;
+            margin-bottom: 1.25rem;
         }
 
         .alert-danger {
@@ -143,56 +144,77 @@
                 transform: translateX(6px);
             }
         }
+
+        /* Responsif: hindari potong di mobile */
+        body {
+            padding: 1rem 0;
+        }
+
+        @media (min-height: 600px) {
+            body {
+                padding: 0;
+            }
+        }
     </style>
 </head>
 
 <body class="d-flex align-items-center justify-content-center min-vh-100">
-    <div class="reset-card">
-        <div class="text-center mb-3">
-            <h4>Lupa Password?</h4>
-            <p class="subtitle">Kami akan kirimkan link reset ke emailmu. Tenang, kamu bisa kembali mengirim kejutan
-                sebentar lagi 💕</p>
-        </div>
-
-        <?php if (!empty($_SESSION['error'])): ?>
-            <div class="alert alert-danger"><?= htmlspecialchars($_SESSION['error']);
-            unset($_SESSION['error']); ?></div>
-        <?php endif; ?>
-
-        <form id="forgotForm" method="POST" action="?page=auth_forgot">
-            <?= SecurityHelper::csrfInput(); ?>
-
-            <div class="mb-4 input-icon">
-                <i class="fas fa-envelope"></i>
-                <input type="email" name="email" class="form-control" placeholder="email@kamu.com" required>
+    <main class="w-100">
+        <div class="reset-card mx-auto">
+            <div class="text-center mb-3">
+                <h1>Lupa Password?</h1>
+                <p class="subtitle">Kami akan kirimkan link reset ke emailmu. Tenang, kamu bisa kembali mengirim kejutan
+                    sebentar lagi 💕</p>
             </div>
 
-            <button type="submit" class="btn btn-reset w-100">Kirim Link Reset</button>
-        </form>
+            <?php if (!empty($_SESSION['error'])): ?>
+                <div class="alert alert-danger" role="alert">
+                    <?= htmlspecialchars($_SESSION['error'], ENT_QUOTES, 'UTF-8');
+                    unset($_SESSION['error']); ?>
+                </div>
+            <?php endif; ?>
 
-        <div class="mt-3 text-center">
-            <a href="?page=login" class="text-link">← Kembali ke Login</a>
+            <form id="forgotForm" method="POST" action="?page=auth_forgot" novalidate>
+                <?= SecurityHelper::csrfInput(); ?>
+
+                <div class="mb-4 input-icon">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" name="email" class="form-control" placeholder="email@kamu.com" required>
+                </div>
+
+                <button type="submit" class="btn btn-reset w-100">Kirim Link Reset</button>
+            </form>
+
+            <div class="mt-4 text-center">
+                <a href="?page=login" class="text-link">← Kembali ke Login</a>
+            </div>
         </div>
-    </div>
+    </main>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const form = document.getElementById('forgotForm');
-            const errorAlert = document.querySelector('.alert-danger');
+            const emailInput = document.querySelector('input[name="email"]');
 
-            if (errorAlert) {
+            // Jika ada error, shake & fokus ke email
+            if (document.querySelector('.alert-danger')) {
                 form.classList.add('shake');
+                if (emailInput) emailInput.focus();
             }
 
-            form.addEventListener('submit', function () {
-                const btn = this.querySelector('button[type="submit"]');
-                btn.disabled = true;
-                btn.textContent = 'Mengirim...';
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.textContent = 'Kirim Link Reset';
-                }, 2000);
-            });
+            // Prevent double-submit
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    const btn = this.querySelector('button[type="submit"]');
+                    if (btn.disabled) {
+                        e.preventDefault();
+                        return;
+                    }
+                    btn.disabled = true;
+                    btn.textContent = 'Mengirim...';
+                    // Biarkan form submit — jangan restore otomatis
+                });
+            }
         });
     </script>
 </body>

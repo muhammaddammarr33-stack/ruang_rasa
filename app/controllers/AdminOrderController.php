@@ -3,12 +3,14 @@
 require_once __DIR__ . '/../models/Order.php';
 require_once __DIR__ . '/../models/Payment.php';
 require_once __DIR__ . '/../models/Shipping.php';
+require_once __DIR__ . '/../models/CustomOrder.php';
 
 class AdminOrderController
 {
     private $orderModel;
     private $paymentModel;
     private $shippingModel;
+    private $customModel;
 
     public function __construct()
     {
@@ -21,6 +23,7 @@ class AdminOrderController
         $this->orderModel = new Order();
         $this->paymentModel = new Payment();
         $this->shippingModel = new Shipping();
+        $this->customModel = new CustomOrder();
     }
 
     public function index()
@@ -41,6 +44,7 @@ class AdminOrderController
         $items = $this->orderModel->getItems($id);
         $payment = $this->orderModel->getPayment($id);
         $shipping = $this->orderModel->getShipping($id);
+        $customOrders = $this->customModel->getByOrderId($id);
 
         include __DIR__ . '/../views/admin/orders/detail.php';
     }

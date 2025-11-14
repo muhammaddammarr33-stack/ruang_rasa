@@ -9,10 +9,10 @@
     <!-- Google Fonts: Poppins -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
-    <!-- Bootstrap CSS (digunakan ringan, mostly untuk grid) -->
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Font Awesome untuk ikon outline -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <style>
@@ -27,13 +27,10 @@
             background-color: var(--off-white);
             font-family: 'Poppins', sans-serif;
             color: var(--dark-grey);
-            padding: 0;
-            margin: 0;
         }
 
         .login-card {
             border-radius: 18px;
-            border: none;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
             background: white;
             padding: 2.25rem 2rem;
@@ -41,17 +38,23 @@
             width: 100%;
         }
 
-        .login-card h4 {
+        .login-card h1 {
             font-weight: 600;
-            margin-bottom: 1.25rem;
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-card p.subtitle {
+            font-size: 1rem;
             color: var(--dark-grey);
+            opacity: 0.85;
+            margin-bottom: 1.5rem;
         }
 
         .form-label {
             font-weight: 500;
             font-size: 0.95rem;
             margin-bottom: 0.5rem;
-            color: var(--dark-grey);
         }
 
         .form-control {
@@ -99,6 +102,7 @@
             border-radius: 12px;
             padding: 0.85rem 1rem;
             font-size: 0.95rem;
+            margin-bottom: 1.25rem;
         }
 
         .alert-danger {
@@ -125,7 +129,6 @@
             padding-left: 2.75rem;
         }
 
-        /* Micro-interaction: shake on error */
         .shake {
             animation: shake 0.5s ease-in-out;
         }
@@ -147,71 +150,90 @@
                 transform: translateX(6px);
             }
         }
+
+        /* Hindari potong di mobile */
+        body {
+            padding: 1rem 0;
+        }
+
+        @media (min-height: 600px) {
+            body {
+                padding: 0;
+            }
+        }
     </style>
 </head>
 
 <body class="d-flex align-items-center justify-content-center min-vh-100">
-    <div class="login-card">
-        <div class="text-center mb-3">
-            <h4>Masuk ke Ruang Rasa</h4>
-            <p class="text-muted" style="font-size: 0.95rem;">Kirim kejutan hangat untuk pasanganmu 💞</p>
+    <main class="w-100">
+        <div class="login-card mx-auto">
+            <div class="text-center mb-3">
+                <h1>Masuk ke Ruang Rasa</h1>
+                <p class="subtitle">Kirim kejutan hangat untuk pasanganmu 💞</p>
+            </div>
+
+            <?php if (!empty($_SESSION['error'])): ?>
+                <div class="alert alert-danger" role="alert">
+                    <?= htmlspecialchars($_SESSION['error'], ENT_QUOTES, 'UTF-8');
+                    unset($_SESSION['error']); ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($_SESSION['success'])): ?>
+                <div class="alert alert-success" role="alert">
+                    <?= htmlspecialchars($_SESSION['success'], ENT_QUOTES, 'UTF-8');
+                    unset($_SESSION['success']); ?>
+                </div>
+            <?php endif; ?>
+
+            <form id="loginForm" method="POST" action="?page=login" novalidate>
+                <?= SecurityHelper::csrfInput(); ?>
+
+                <div class="mb-4 input-icon">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" name="email" class="form-control" placeholder="email@kamu.com" required>
+                </div>
+
+                <div class="mb-4 input-icon">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="btn btn-login w-100">Masuk</button>
+            </form>
+
+            <div class="mt-4 text-center">
+                <a href="?page=register" class="text-link">Belum punya akun?</a> |
+                <a href="?page=auth_forgot" class="text-link">Lupa password?</a>
+            </div>
         </div>
-
-        <!-- PHP Alerts tetap dipertahankan -->
-        <?php if (!empty($_SESSION['error'])): ?>
-            <div class="alert alert-danger"><?= htmlspecialchars($_SESSION['error']);
-            unset($_SESSION['error']); ?></div>
-        <?php endif; ?>
-        <?php if (!empty($_SESSION['success'])): ?>
-            <div class="alert alert-success"><?= htmlspecialchars($_SESSION['success']);
-            unset($_SESSION['success']); ?>
-            </div>
-        <?php endif; ?>
-
-        <form id="loginForm" method="POST" action="?page=login">
-            <?= SecurityHelper::csrfInput(); ?>
-
-            <div class="mb-3 input-icon">
-                <i class="fas fa-envelope"></i>
-                <input type="email" name="email" class="form-control" placeholder="email@kamu.com" required>
-            </div>
-
-            <div class="mb-3 input-icon">
-                <i class="fas fa-lock"></i>
-                <input type="password" name="password" class="form-control" placeholder="••••••••" required>
-            </div>
-
-            <button type="submit" class="btn btn-login w-100">Masuk</button>
-        </form>
-
-        <div class="mt-3 text-center" style="font-size: 0.95rem;">
-            <a href="?page=register" class="text-link">Belum punya akun?</a> |
-            <a href="?page=auth_forgot" class="text-link">Lupa password?</a>
-        </div>
-    </div>
+    </main>
 
     <script>
-        // Validasi UX: shake animasi saat error (opsional tambahan)
         document.addEventListener('DOMContentLoaded', function () {
             const loginForm = document.getElementById('loginForm');
-            const alerts = document.querySelectorAll('.alert');
+            const emailInput = document.querySelector('input[name="email"]');
 
-            // Jika ada alert error, shake form
+            // Jika ada error, shake & fokus ke email
             if (document.querySelector('.alert-danger')) {
                 loginForm.classList.add('shake');
+                if (emailInput) emailInput.focus();
             }
 
-            // Prevent double-submit (opsional tapi baik untuk UX)
-            loginForm.addEventListener('submit', function () {
-                const submitBtn = this.querySelector('button[type="submit"]');
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Memproses...';
-                // Kembalikan setelah 2 detik jika gagal, atau biarkan jika redirect
-                setTimeout(() => {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Masuk';
-                }, 2000);
-            });
+            // Prevent double-submit
+            if (loginForm) {
+                loginForm.addEventListener('submit', function (e) {
+                    const btn = this.querySelector('button[type="submit"]');
+                    if (btn.disabled) {
+                        e.preventDefault();
+                        return;
+                    }
+                    btn.disabled = true;
+                    btn.textContent = 'Memproses...';
+                    // Biarkan form submit — jangan restore otomatis
+                    // Redirect atau reload akan menghentikan ini
+                });
+            }
         });
     </script>
 </body>

@@ -65,7 +65,7 @@ class CheckoutController
             $orderId = $orderModel->create($data, $cart);
 
             // create payment record (pending)
-            $paymentModel->create($orderId, $total, $data['payment_method']);
+            $paymentModel->create($orderId, "midtrans", null, $total, "pending");
 
             // create shipping record (status pending)
             $courier = $_POST['courier'] ?? 'jne';

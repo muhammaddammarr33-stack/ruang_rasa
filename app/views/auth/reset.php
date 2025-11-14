@@ -31,7 +31,6 @@
 
         .reset-new-card {
             border-radius: 18px;
-            border: none;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
             background: white;
             padding: 2.25rem 2rem;
@@ -39,14 +38,15 @@
             width: 100%;
         }
 
-        .reset-new-card h4 {
+        .reset-new-card h1 {
             font-weight: 600;
-            margin-bottom: 1rem;
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
             color: var(--dark-grey);
         }
 
         .reset-new-card p.subtitle {
-            font-size: 0.95rem;
+            font-size: 1rem;
             color: var(--dark-grey);
             opacity: 0.85;
             margin-bottom: 1.5rem;
@@ -100,6 +100,7 @@
             border-radius: 12px;
             padding: 0.85rem 1rem;
             font-size: 0.95rem;
+            margin-bottom: 1.25rem;
         }
 
         .alert-danger {
@@ -144,66 +145,87 @@
             }
         }
 
-        .password-hint {
+        .form-text {
             font-size: 0.85rem;
             color: #777;
             margin-top: 0.25rem;
+        }
+
+        /* Responsif: hindari potong di mobile */
+        body {
+            padding: 1rem 0;
+        }
+
+        @media (min-height: 600px) {
+            body {
+                padding: 0;
+            }
         }
     </style>
 </head>
 
 <body class="d-flex align-items-center justify-content-center min-vh-100">
-    <div class="reset-new-card">
-        <div class="text-center mb-3">
-            <h4>Atur Password Baru</h4>
-            <p class="subtitle">Buat sandi baru agar kamu bisa kembali mengirim kejutan untuk pasanganmu 💞</p>
-        </div>
-
-        <?php if (!empty($_SESSION['error'])): ?>
-            <div class="alert alert-danger"><?= htmlspecialchars($_SESSION['error']);
-            unset($_SESSION['error']); ?></div>
-        <?php endif; ?>
-
-        <form id="resetNewForm" method="POST" action="?page=auth_reset">
-            <?= SecurityHelper::csrfInput(); ?>
-            <input type="hidden" name="token" value="<?= htmlspecialchars($_GET['token'] ?? $_POST['token'] ?? '') ?>">
-
-            <div class="mb-4 input-icon">
-                <i class="fas fa-lock"></i>
-                <input type="password" name="password" class="form-control" placeholder="Minimal 6 karakter" required
-                    minlength="6">
-                <div class="password-hint">Gunakan kombinasi huruf & angka untuk keamanan lebih baik</div>
+    <main class="w-100">
+        <div class="reset-new-card mx-auto">
+            <div class="text-center mb-3">
+                <h1>Atur Password Baru</h1>
+                <p class="subtitle">Buat sandi baru agar kamu bisa kembali mengirim kejutan untuk pasanganmu 💞</p>
             </div>
 
-            <button type="submit" class="btn btn-update w-100">Ubah Password</button>
-        </form>
+            <?php if (!empty($_SESSION['error'])): ?>
+                <div class="alert alert-danger" role="alert">
+                    <?= htmlspecialchars($_SESSION['error'], ENT_QUOTES, 'UTF-8');
+                    unset($_SESSION['error']); ?>
+                </div>
+            <?php endif; ?>
 
-        <div class="mt-3 text-center">
-            <a href="?page=login" class="text-link">← Kembali ke Login</a>
+            <form id="resetNewForm" method="POST" action="?page=auth_reset" novalidate>
+                <?= SecurityHelper::csrfInput(); ?>
+                <input type="hidden" name="token"
+                    value="<?= htmlspecialchars($_GET['token'] ?? $_POST['token'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+
+                <div class="mb-4 input-icon">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="password" class="form-control" placeholder="Minimal 6 karakter"
+                        required minlength="6">
+                    <small class="form-text">Gunakan kombinasi huruf & angka untuk keamanan lebih baik</small>
+                </div>
+
+                <button type="submit" class="btn btn-update w-100">Ubah Password</button>
+            </form>
+
+            <div class="mt-4 text-center">
+                <a href="?page=login" class="text-link">← Kembali ke Login</a>
+            </div>
         </div>
-    </div>
+    </main>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const form = document.getElementById('resetNewForm');
-            const errorAlert = document.querySelector('.alert-danger');
+            const passwordInput = document.querySelector('input[name="password"]');
 
-            if (errorAlert) {
+            // Jika ada error, shake & fokus ke password
+            if (document.querySelector('.alert-danger')) {
                 form.classList.add('shake');
+                if (passwordInput) passwordInput.focus();
             }
 
-            form.addEventListener('submit', function () {
-                const btn = this.querySelector('button[type="submit"]');
-                btn.disabled = true;
-                btn.textContent = 'Mengubah...';
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.textContent = 'Ubah Password';
-                }, 2000);
-            });
+            // Prevent double-submit
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    const btn = this.querySelector('button[type="submit"]');
+                    if (btn.disabled) {
+                        e.preventDefault();
+                        return;
+                    }
+                    btn.disabled = true;
+                    btn.textContent = 'Mengubah...';
+                    // Biarkan form submit — jangan restore otomatis
+                });
+            }
 
             // Validasi real-time password
-            const passwordInput = document.querySelector('input[name="password"]');
             if (passwordInput) {
                 passwordInput.addEventListener('input', function () {
                     if (this.value.length > 0 && this.value.length < 6) {

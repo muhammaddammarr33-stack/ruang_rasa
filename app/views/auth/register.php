@@ -9,7 +9,7 @@
     <!-- Google Fonts: Poppins -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
-    <!-- Bootstrap (digunakan ringan) -->
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Font Awesome -->
@@ -31,7 +31,6 @@
 
         .register-card {
             border-radius: 18px;
-            border: none;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
             background: white;
             padding: 2.25rem 2rem;
@@ -39,14 +38,14 @@
             width: 100%;
         }
 
-        .register-card h4 {
+        .register-card h1 {
             font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--dark-grey);
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
         }
 
         .register-card p.subtitle {
-            font-size: 0.95rem;
+            font-size: 1rem;
             color: var(--dark-grey);
             opacity: 0.85;
             margin-bottom: 1.5rem;
@@ -56,11 +55,9 @@
             font-weight: 500;
             font-size: 0.95rem;
             margin-bottom: 0.5rem;
-            color: var(--dark-grey);
         }
 
-        .form-control,
-        .form-control:focus {
+        .form-control {
             border-radius: 12px;
             padding: 0.75rem 1rem;
             border: 1px solid #ddd;
@@ -107,11 +104,11 @@
             border-radius: 12px;
             padding: 0.85rem 1rem;
             font-size: 0.95rem;
-            border-left: 4px solid var(--soft-blue);
+            margin-bottom: 1.25rem;
         }
 
         .alert-danger {
-            border-left-color: #e74c3c;
+            border-left: 4px solid #e74c3c;
         }
 
         .input-icon {
@@ -153,87 +150,106 @@
             }
         }
 
-        .optional-note {
+        .form-text {
             font-size: 0.85rem;
             color: #777;
             margin-top: 0.25rem;
+        }
+
+        /* Responsif: hindari potong di mobile */
+        body {
+            padding: 1rem 0;
+        }
+
+        @media (min-height: 600px) {
+            body {
+                padding: 0;
+            }
         }
     </style>
 </head>
 
 <body class="d-flex align-items-center justify-content-center min-vh-100">
-    <div class="register-card">
-        <div class="text-center mb-3">
-            <h4>Buat Akun Ruang Rasa</h4>
-            <p class="subtitle">Mulai kirim kejutan hangat untuk pasanganmu dari jarak jauh 💖</p>
+    <main class="w-100">
+        <div class="register-card mx-auto">
+            <div class="text-center mb-3">
+                <h1>Buat Akun Ruang Rasa</h1>
+                <p class="subtitle">Mulai kirim kejutan hangat untuk pasanganmu dari jarak jauh 💖</p>
+            </div>
+
+            <?php if (!empty($_SESSION['error'])): ?>
+                <div class="alert alert-danger" role="alert">
+                    <?= htmlspecialchars($_SESSION['error'], ENT_QUOTES, 'UTF-8');
+                    unset($_SESSION['error']); ?>
+                </div>
+            <?php endif; ?>
+
+            <form id="registerForm" method="POST" action="?page=register" novalidate>
+                <?= SecurityHelper::csrfInput(); ?>
+
+                <div class="mb-4 input-icon">
+                    <i class="fas fa-user"></i>
+                    <input type="text" name="name" class="form-control" placeholder="Nama lengkapmu" required>
+                </div>
+
+                <div class="mb-4 input-icon">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" name="email" class="form-control" placeholder="email@kamu.com" required>
+                </div>
+
+                <div class="mb-4 input-icon">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="password" class="form-control" placeholder="Minimal 6 karakter"
+                        required minlength="6">
+                </div>
+
+                <div class="mb-4 input-icon">
+                    <i class="fas fa-phone"></i>
+                    <input type="text" name="phone" class="form-control" placeholder="Nomor WhatsApp (opsional)">
+                    <div class="form-text">Kami hanya akan menghubungimu jika perlu konfirmasi pesanan</div>
+                </div>
+
+                <div class="mb-4 input-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <textarea name="address" class="form-control" placeholder="Alamat pengiriman (opsional)"></textarea>
+                    <div class="form-text">Alamat bisa diisi nanti saat pesan hadiah</div>
+                </div>
+
+                <button type="submit" class="btn btn-register w-100">Daftar Sekarang</button>
+            </form>
+
+            <div class="mt-4 text-center">
+                <a href="?page=login" class="text-link">Sudah punya akun? Masuk</a>
+            </div>
         </div>
-
-        <?php if (!empty($_SESSION['error'])): ?>
-            <div class="alert alert-danger"><?= htmlspecialchars($_SESSION['error']);
-            unset($_SESSION['error']); ?></div>
-        <?php endif; ?>
-
-        <form id="registerForm" method="POST" action="?page=register">
-            <?= SecurityHelper::csrfInput(); ?>
-
-            <div class="mb-3 input-icon">
-                <i class="fas fa-user"></i>
-                <input type="text" name="name" class="form-control" placeholder="Nama lengkapmu" required>
-            </div>
-
-            <div class="mb-3 input-icon">
-                <i class="fas fa-envelope"></i>
-                <input type="email" name="email" class="form-control" placeholder="email@kamu.com" required>
-            </div>
-
-            <div class="mb-3 input-icon">
-                <i class="fas fa-lock"></i>
-                <input type="password" name="password" class="form-control" placeholder="Minimal 6 karakter" required
-                    minlength="6">
-            </div>
-
-            <div class="mb-3 input-icon">
-                <i class="fas fa-phone"></i>
-                <input type="text" name="phone" class="form-control" placeholder="Nomor WhatsApp (opsional)">
-                <div class="optional-note">Kami hanya akan menghubungimu jika perlu konfirmasi pesanan</div>
-            </div>
-
-            <div class="mb-4 input-icon">
-                <i class="fas fa-map-marker-alt"></i>
-                <textarea name="address" class="form-control" placeholder="Alamat pengiriman (opsional)"></textarea>
-                <div class="optional-note">Alamat bisa diisi nanti saat pesan hadiah</div>
-            </div>
-
-            <button type="submit" class="btn btn-register w-100">Daftar Sekarang</button>
-        </form>
-
-        <div class="mt-3 text-center">
-            <a href="?page=login" class="text-link">Sudah punya akun? Masuk</a>
-        </div>
-    </div>
+    </main>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const form = document.getElementById('registerForm');
-            const alerts = document.querySelector('.alert-danger');
+            const nameInput = document.querySelector('input[name="name"]');
 
-            // Shake jika ada error
-            if (alerts) {
+            // Jika ada error, shake & fokus ke nama
+            if (document.querySelector('.alert-danger')) {
                 form.classList.add('shake');
+                if (nameInput) nameInput.focus();
             }
 
             // Prevent double-submit
-            form.addEventListener('submit', function () {
-                const btn = this.querySelector('button[type="submit"]');
-                btn.disabled = true;
-                btn.textContent = 'Mendaftar...';
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.textContent = 'Daftar Sekarang';
-                }, 2000);
-            });
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    const btn = this.querySelector('button[type="submit"]');
+                    if (btn.disabled) {
+                        e.preventDefault();
+                        return;
+                    }
+                    btn.disabled = true;
+                    btn.textContent = 'Mendaftar...';
+                    // Biarkan form submit — jangan restore otomatis
+                });
+            }
 
-            // Optional: real-time password strength hint (disederhanakan)
+            // Validasi password real-time
             const passwordInput = document.querySelector('input[name="password"]');
             if (passwordInput) {
                 passwordInput.addEventListener('input', function () {

@@ -68,6 +68,23 @@ if (session_status() === PHP_SESSION_NONE)
             </div>
         </div>
 
+        <?php if (!empty($customOrders)): ?>
+            <h5 class="mt-4">Personalisasi Terkait</h5>
+            <?php foreach ($customOrders as $co): ?>
+                <div class="border p-2 mb-2">
+                    <strong><?= htmlspecialchars($co['product_name']) ?> (ID #<?= $co['id'] ?>)</strong><br>
+                    Teks: <?= htmlspecialchars($co['custom_text']) ?><br>
+                    Font: <?= htmlspecialchars($co['font_style']) ?><br>
+                    Warna: <span
+                        style="display:inline-block;width:18px;height:18px;background:<?= htmlspecialchars($co['text_color']) ?>;border:1px solid #ccc"></span>
+                    <?= htmlspecialchars($co['text_color']) ?><br>
+                    Packaging: <?= htmlspecialchars($co['packaging_type']) ?><br>
+                    Ribbon: <?= htmlspecialchars($co['ribbon_color']) ?><br>
+                    Catatan: <?= nl2br(htmlspecialchars($co['special_instructions'])) ?><br>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+
         <?php if (!empty($payment)): ?>
             <div class="card mb-4">
                 <div class="card-body">

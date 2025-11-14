@@ -220,13 +220,36 @@ switch ($page) {
         break;
 
     // ===================== ORDER CONTROLLER =====================
-    case 'order_history':
-        require_once __DIR__ . '/../app/controllers/OrderController.php';
-        $controller = new OrderController();
-        $controller->history();
+
+    case 'custom_form':
+        require_once __DIR__ . '/../app/controllers/CustomOrderController.php';
+        (new CustomOrderController())->form();
         break;
 
+    case 'custom_create':
+        require_once __DIR__ . '/../app/controllers/CustomOrderController.php';
+        (new CustomOrderController())->create();
+        break;
 
+    case 'invoice':
+        require_once '../app/controllers/InvoiceController.php';
+        (new InvoiceController())->generate();
+        break;
+
+    case 'get_snap_token':
+        require_once __DIR__ . '/../app/controllers/PaymentController.php';
+        (new PaymentController())->getSnapToken();
+        break;
+
+    case 'payment_verify':
+        require_once __DIR__ . '/../app/controllers/PaymentController.php';
+        (new PaymentController())->verify();
+        break;
+
+    case 'save_transaction':
+        require_once __DIR__ . '/../app/controllers/PaymentController.php';
+        (new PaymentController())->saveTransaction();
+        break;
 
     // ...
 
@@ -329,32 +352,32 @@ switch ($page) {
     //     }
     //     break;
 
-    case 'custom_form':
-        if (!isset($_SESSION['user'])) {
-            header("Location: ?page=login");
-            exit;
-        }
-        if ($_SERVER['REQUEST_METHOD'] === 'POST')
-            $customCtrl->create();
-        else
-            $customCtrl->form();
-        break;
+    // case 'custom_form':
+    //     if (!isset($_SESSION['user'])) {
+    //         header("Location: ?page=login");
+    //         exit;
+    //     }
+    //     if ($_SERVER['REQUEST_METHOD'] === 'POST')
+    //         $customCtrl->create();
+    //     else
+    //         $customCtrl->form();
+    //     break;
 
-    case 'custom_orders':
-        if (!isset($_SESSION['user'])) {
-            header("Location: ?page=login");
-            exit;
-        }
-        $customCtrl->list();
-        break;
+    // case 'custom_orders':
+    //     if (!isset($_SESSION['user'])) {
+    //         header("Location: ?page=login");
+    //         exit;
+    //     }
+    //     $customCtrl->list();
+    //     break;
 
-    case 'custom_detail':
-        if (!isset($_SESSION['user'])) {
-            header("Location: ?page=login");
-            exit;
-        }
-        $customCtrl->detail();
-        break;
+    // case 'custom_detail':
+    //     if (!isset($_SESSION['user'])) {
+    //         header("Location: ?page=login");
+    //         exit;
+    //     }
+    //     $customCtrl->detail();
+    //     break;
 
     // case 'promotions':
     //     $promoCtrl->list();

@@ -132,5 +132,50 @@ class Order
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public function getInvoiceData($orderId)
+    {
+        $stmt = $this->db->prepare("
+        SELECT o.*, u.name AS customer_name, u.email AS customer_email
+        FROM orders o
+        LEFT JOIN users u ON o.user_id = u.id
+        WHERE o.id = ?
+    ");
+        $stmt->execute([$orderId]);
+        $order = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $itemStmt = $this->db->prepare("
+        SELECT oi.*, p.name AS product_name
+        FROM order_items oi
+        LEFT JOIN products p ON oi.product_id = p.id
+        WHERE oi.order_id = ?
+    ");
+        $itemStmt->execute([$orderId]);
+        $items = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return [
+            'order' => $order,
+            'items' => $items
+        ];
+    }
+
+    public function updateOrderStatus($orderId, $status)
+    {
+        $stmt = $this->db->prepare("
+        UPDATE orders 
+        SET order_status = ?, updated_at = NOW()
+        WHERE id = ?
+    ");
+        return $stmt->execute([$status, $orderId]);
+    }
+
+    public function updatePaymentStatus($orderId, $status)
+    {
+        $stmt = $this->db->prepare("
+        UPDATE orders 
+        SET payment_status = ?
+        WHERE id = ?
+    ");
+        return $stmt->execute([$status, $orderId]);
+    }
 
 }
