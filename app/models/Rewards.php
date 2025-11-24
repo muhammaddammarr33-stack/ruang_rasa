@@ -1,57 +1,73 @@
 <?php
-// // app/models/Rewards.php
-// require_once __DIR__ . '/DB.php';
+// app/models/Rewards.php
+require_once __DIR__ . '/DB.php';
 
-// class Rewards
-// {
-//     private $db;
-//     public function __construct()
-//     {
-//         $this->db = DB::getInstance();
-//     }
+class Rewards
+{
+    private $db;
 
-//     public function all()
-//     {
-//         return $this->db->query("SELECT * FROM rewards ORDER BY points_required ASC")->fetchAll();
-//     }
+    public function __construct()
+    {
+        $this->db = DB::getInstance();
+    }
 
-//     public function find($id)
-//     {
-//         $stmt = $this->db->prepare("SELECT * FROM rewards WHERE id=?");
-//         $stmt->execute([$id]);
-//         return $stmt->fetch();
-//     }
+    public function all()
+    {
+        $stmt = $this->db->query("SELECT * FROM rewards ORDER BY created_at DESC");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 
-//     public function redeem($userId, $rewardId)
-//     {
-//         $reward = $this->find($rewardId);
-//         if (!$reward)
-//             throw new Exception("Reward tidak ditemukan");
+    public function find($id)
+    {
+        $stmt = $this->db->prepare("SELECT * FROM rewards WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 
-//         // cek membership points
-//         $mStmt = $this->db->prepare("SELECT points FROM memberships WHERE user_id = ?");
-//         $mStmt->execute([$userId]);
-//         $points = $mStmt->fetchColumn();
-//         if ($points === false)
-//             $points = 0;
-//         if ($points < $reward['points_required'])
-//             throw new Exception("Poin tidak cukup");
+    public function create($data)
+    {
+        $stmt = $this->db->prepare("INSERT INTO rewards (name, points_required, description, created_at) VALUES (?, ?, ?, NOW())");
+        return $stmt->execute([$data['name'], $data['points_required'], $data['description']]);
+    }
 
-//         // kurangi poin
-//         $this->db->beginTransaction();
-//         try {
-//             // deduct
-//             $this->db->prepare("UPDATE memberships SET points = points - ?, updated_at = NOW() WHERE user_id = ?")
-//                 ->execute([$reward['points_required'], $userId]);
+    public function update($id, $data)
+    {
+        $stmt = $this->db->prepare("UPDATE rewards SET name = ?, points_required = ?, description = ? WHERE id = ?");
+        return $stmt->execute([$data['name'], $data['points_required'], $data['description'], $id]);
+    }
 
-//             // log redemption
-//             $this->db->prepare("INSERT INTO reward_redemptions (user_id, reward_id, redeemed_at) VALUES (?, ?, NOW())")
-//                 ->execute([$userId, $rewardId]);
+    public function delete($id)
+    {
+        $stmt = $this->db->prepare("DELETE FROM rewards WHERE id = ?");
+        return $stmt->execute([$id]);
+    }
 
-//             $this->db->commit();
-//         } catch (Exception $e) {
-//             $this->db->rollBack();
-//             throw $e;
-//         }
-//     }
-// }
+    public function getUserRedemptionHistory($userId)
+    {
+        $sql = "
+        SELECT rr.*, r.name, r.points_required
+        FROM reward_redemptions rr
+        JOIN rewards r ON r.id = rr.reward_id
+        WHERE rr.user_id = ?
+        ORDER BY rr.redeemed_at DESC
+    ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getAllRedemptionHistory()
+    {
+        $sql = "
+        SELECT rr.*, 
+               r.name, r.points_required,
+               u.name AS user_name
+        FROM reward_redemptions rr
+        JOIN rewards r ON r.id = rr.reward_id
+        JOIN users u ON u.id = rr.user_id
+        ORDER BY rr.redeemed_at DESC
+    ";
+        return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+}

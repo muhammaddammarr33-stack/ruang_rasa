@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Asia/Jakarta'); // 👈 TAMBAHKAN INI
 // public/index.php
 require_once __DIR__ . '/../app/controllers/AuthController.php';
 require_once __DIR__ . '/../app/controllers/AuthVerifyController.php'; // ✅ tambah baris ini
@@ -9,7 +10,8 @@ require_once __DIR__ . '/../app/controllers/CartController.php';
 require_once __DIR__ . '/../app/controllers/ConsultationController.php';
 require_once __DIR__ . '/../app/controllers/CustomOrderController.php';
 require_once __DIR__ . '/../app/controllers/PromotionController.php';
-// require_once __DIR__ . '/../app/controllers/MembershipController.php';
+require_once __DIR__ . '/../app/controllers/ShippingController.php';
+require_once __DIR__ . '/../app/controllers/MembershipController.php';
 // require_once __DIR__ . '/../app/controllers/ReferralController.php';
 // require_once __DIR__ . '/../app/controllers/NewsletterController.php';
 session_start();
@@ -83,12 +85,20 @@ switch ($page) {
 
     // admin
     case 'admin_dashboard':
-        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-            header("Location: ?page=login");
-            exit;
-        }
-        include __DIR__ . '/../app/views/admin/dashboard.php';
+        require_once __DIR__ . '/../app/controllers/AdminDashboardController.php';
+        (new AdminDashboardController())->index();
         break;
+
+    case 'admin_dashboard_data':
+        require_once __DIR__ . '/../app/controllers/AdminDashboardController.php';
+        (new AdminDashboardController())->data(); // returns JSON for AJAX
+        break;
+
+    case 'admin_activity':
+        require_once __DIR__ . '/../app/controllers/AdminDashboardController.php';
+        (new AdminDashboardController())->activity(); // returns JSON recent activity
+        break;
+
     // ...
     case 'admin_products':
         $productCtrl->adminIndex();
@@ -191,19 +201,45 @@ switch ($page) {
         require_once __DIR__ . '/../app/controllers/CheckoutController.php';
         (new CheckoutController())->success();
         break;
+    /***********************
+     * ADMIN ORDERS MODULE
+     ***********************/
 
-    // Admin orders
+    // List orders (search + filter + pagination)
     case 'admin_orders':
         require_once __DIR__ . '/../app/controllers/AdminOrderController.php';
         (new AdminOrderController())->index();
         break;
+
+    // Detail order
     case 'admin_order_detail':
         require_once __DIR__ . '/../app/controllers/AdminOrderController.php';
         (new AdminOrderController())->detail();
         break;
-    case 'admin_order_update_status':
+
+    // Update status (order_status/payment_status)
+    case 'admin_order_update':
         require_once __DIR__ . '/../app/controllers/AdminOrderController.php';
         (new AdminOrderController())->updateStatus();
+        break;
+
+    // Cancel order
+    case 'admin_order_cancel':
+        require_once __DIR__ . '/../app/controllers/AdminOrderController.php';
+        (new AdminOrderController())->cancel();
+        break;
+
+    // Cancel order
+    case 'admin_order_refund':
+        require_once __DIR__ . '/../app/controllers/AdminOrderController.php';
+        (new AdminOrderController())->refund();
+        break;
+
+
+    // Export orders (CSV / Excel)
+    case 'admin_order_export':
+        require_once __DIR__ . '/../app/controllers/AdminOrderController.php';
+        (new AdminOrderController())->export();
         break;
 
     // user orders
@@ -253,7 +289,6 @@ switch ($page) {
 
     // ...
 
-
     case 'admin_update_order_status':
         if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
             header("Location: ?page=login");
@@ -273,14 +308,6 @@ switch ($page) {
         include __DIR__ . '/../app/views/admin/payments.php';
         break;
 
-    case 'admin_consultations':
-        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-            header("Location: ?page=login");
-            exit;
-        }
-        include __DIR__ . '/../app/views/admin/consultations.php';
-        break;
-
     // ...
     case 'user_dashboard':
         if (!isset($_SESSION['user'])) {
@@ -297,47 +324,204 @@ switch ($page) {
         }
         include __DIR__ . '/../app/views/user/orders.php';
         break;
-    // konsultasi
-    case 'consultation_form':
-        if ($_SERVER['REQUEST_METHOD'] === 'POST')
-            $consultationCtrl->create();
-        else
-            $consultationCtrl->form();
+
+    // API RajaOngkir
+    case 'shipping_provinces':
+        require_once __DIR__ . '/../app/controllers/ShippingController.php';
+        (new ShippingController())->provinces();
+        exit; // 👈 UBAH DARI break; MENJADI exit;
+    // break; // Hapus atau jadikan komentar
+
+    case 'shipping_cities':
+        require_once __DIR__ . '/../app/controllers/ShippingController.php';
+        (new ShippingController())->cities();
+        exit; // 👈 UBAH DARI break; MENJADI exit;
+    // break;
+
+    case 'shipping_districts':
+        require_once __DIR__ . '/../app/controllers/ShippingController.php';
+        (new ShippingController())->districts();
+        exit; // Wajib exit;
+
+    case 'shipping_cost':
+        require_once __DIR__ . '/../app/controllers/ShippingController.php';
+        (new ShippingController())->cost();
+        exit; // 👈 UBAH DARI break; MENJADI exit;
+    // break;
+
+    // Untuk kasus admin, jika tidak ada output JSON, biarkan break; jika ada output, gunakan exit;
+    case 'admin_shipping_update_tracking':
+        require_once __DIR__ . '/../app/controllers/ShippingController.php';
+        (new ShippingController())->updateTracking();
+        break; // Asumsi: fungsi ini tidak mengeluarkan JSON mentah
+
+    case 'admin_shipping_update_status':
+        require_once __DIR__ . '/../app/controllers/ShippingController.php';
+        (new ShippingController())->updateStatus();
+        break; // Asumsi: fungsi ini tidak mengeluarkan JSON mentah
+
+    // Admin rewards
+    case 'admin_rewards':
+        require_once __DIR__ . '/../app/controllers/AdminRewardsController.php';
+        (new AdminRewardsController())->index();
+        break;
+    case 'admin_rewards_form':
+        require_once __DIR__ . '/../app/controllers/AdminRewardsController.php';
+        (new AdminRewardsController())->form();
+        break;
+    case 'admin_rewards_store':
+        require_once __DIR__ . '/../app/controllers/AdminRewardsController.php';
+        (new AdminRewardsController())->store();
+        break;
+    case 'admin_rewards_update':
+        require_once __DIR__ . '/../app/controllers/AdminRewardsController.php';
+        (new AdminRewardsController())->update();
+        break;
+    case 'admin_rewards_delete':
+        require_once __DIR__ . '/../app/controllers/AdminRewardsController.php';
+        (new AdminRewardsController())->destroy();
         break;
 
+    // User rewards
+    case 'user_rewards':
+        require_once __DIR__ . '/../app/controllers/RewardController.php';
+        (new RewardController())->catalog();
+        break;
+    case 'claim_reward':
+    case 'user_rewards_claim': // alias
+        require_once __DIR__ . '/../app/controllers/RewardController.php';
+        (new RewardController())->claim();
+        break;
+
+    // USER reward history
+    case 'user_reward_history':
+        require_once __DIR__ . '/../app/controllers/UserRewardHistoryController.php';
+        $c = new UserRewardHistoryController();
+        $c->index();
+        break;
+
+    // ADMIN reward redemptions
+    case 'admin_reward_redemptions':
+        require_once __DIR__ . '/../app/controllers/AdminRewardRedemptionController.php';
+        $c = new AdminRewardRedemptionController();
+        $c->index();
+        break;
+
+
+    /* ===============================
+       CONSULTATION (USER SIDE)
+   ================================ */
     case 'consultations':
-        $consultationCtrl->list();
+        require_once __DIR__ . '/../app/controllers/ConsultationController.php';
+        (new ConsultationController())->list();
         break;
 
-    case 'consultation_suggest':
-        if ($_SERVER['REQUEST_METHOD'] === 'POST')
-            $consultationCtrl->saveSuggestion();
-        else
-            $consultationCtrl->suggestForm();
+    case 'consultation_form':
+        require_once __DIR__ . '/../app/controllers/ConsultationController.php';
+        (new ConsultationController())->form();
+        break;
+
+    case 'consultation_create':
+        require_once __DIR__ . '/../app/controllers/ConsultationController.php';
+        (new ConsultationController())->create();
         break;
 
     case 'consultation_feedback':
-        if ($_SERVER['REQUEST_METHOD'] === 'POST')
-            $consultationCtrl->submitFeedback();
-        else
-            $consultationCtrl->feedbackForm();
+        require_once __DIR__ . '/../app/controllers/ConsultationController.php';
+        (new ConsultationController())->feedbackForm();
         break;
 
-    case 'admin_consultation':
-        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-            header("Location: ?page=login");
-            exit;
-        }
-        include __DIR__ . '/../app/views/admin/consultations.php';
+    case 'consultation_feedback_submit':
+        require_once __DIR__ . '/../app/controllers/ConsultationController.php';
+        (new ConsultationController())->submitFeedback();
+        break;
+
+    case 'consultation_direct':
+        require_once __DIR__ . '/../app/controllers/ConsultationController.php';
+        (new ConsultationController())->startDirectChat();
+        break;
+
+    /* ===== ADMIN CONSULTATION FINAL ROUTES ===== */
+
+    case 'admin_consultations':
+        require_once __DIR__ . '/../app/controllers/AdminConsultationController.php';
+        (new AdminConsultationController())->index();
         break;
 
     case 'admin_consultation_detail':
-        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-            header("Location: ?page=login");
-            exit;
-        }
-        include __DIR__ . '/../app/views/admin/consultation_detail.php';
+        require_once __DIR__ . '/../app/controllers/AdminConsultationController.php';
+        (new AdminConsultationController())->detail();
         break;
+
+    /* AI Suggestion */
+    case 'admin_consultation_ai':
+        require_once __DIR__ . '/../app/controllers/AdminConsultationController.php';
+        (new AdminConsultationController())->aiSuggest();
+        break;
+
+    /* Manual suggest */
+    case 'consultation_suggest':
+        require_once __DIR__ . '/../app/controllers/AdminConsultationController.php';
+        (new AdminConsultationController())->suggestForm();
+        break;
+
+    case 'consultation_suggest_save':
+        require_once __DIR__ . '/../app/controllers/AdminConsultationController.php';
+        (new AdminConsultationController())->saveSuggestion();
+        break;
+
+
+    /* Mark completed */
+    case 'admin_consultation_done':
+        require_once __DIR__ . '/../app/controllers/AdminConsultationController.php';
+        (new AdminConsultationController())->markDone();
+        break;
+
+    // chat endpoints
+    case 'consultation_chat':
+        require_once __DIR__ . '/../app/controllers/ConsultationController.php';
+        (new ConsultationController())->chatPage();
+        break;
+
+    case 'chat_send':
+        require_once __DIR__ . '/../app/controllers/ConsultationChatController.php';
+        (new ConsultationChatController())->sendMessage();
+        break;
+
+    case 'chat_fetch':
+        require_once __DIR__ . '/../app/controllers/ConsultationChatController.php';
+        (new ConsultationChatController())->fetchMessages();
+        break;
+
+    case 'add_to_cart_ajax':
+        require_once __DIR__ . '/../app/controllers/CartController.php';
+        echo (new CartController())->addToCartAjax();
+        exit;
+
+    case 'complete_consultation':
+        require_once __DIR__ . '/../app/controllers/ConsultationController.php';
+        (new ConsultationController())->completeConsultation();
+        break;
+
+
+    // case 'chat_send':
+    //     require_once __DIR__ . '/../app/controllers/ChatController.php';
+    //     (new ChatController())->send();
+    //     break;
+    // case 'chat_fetch':
+    //     require_once __DIR__ . '/../app/controllers/ChatController.php';
+    //     (new ChatController())->fetch();
+    //     break;
+    // case 'chat_mark_read':
+    //     require_once __DIR__ . '/../app/controllers/ChatController.php';
+    //     (new ChatController())->markRead();
+    //     break;
+    // case 'chat_unread_count':
+    //     require_once __DIR__ . '/../app/controllers/ChatController.php';
+    //     (new ChatController())->unreadCount();
+    //     break;
+
+
 
     // case 'product_detail':
     //     include __DIR__ . '/../app/views/products/detail.php';

@@ -5,6 +5,7 @@ require_once __DIR__ . '/../models/Payment.php';
 require_once __DIR__ . '/../models/Shipping.php';
 require_once __DIR__ . '/../models/CustomOrder.php';
 require_once __DIR__ . '/../models/Product.php';
+require_once __DIR__ . '/../models/Memberships.php';
 
 class CheckoutController
 {
@@ -39,7 +40,7 @@ class CheckoutController
             exit;
         }
 
-        // hitung total dengan diskon per item
+        // Hitung total produk
         $total = 0;
         foreach ($cart as $it) {
             $price = $it['price'];
@@ -48,11 +49,32 @@ class CheckoutController
             $total += $finalPrice * $it['qty'];
         }
 
+        // Tambahkan ongkir
+        $shippingCost = (int) ($_POST['shipping_cost'] ?? 0);
+        if ($shippingCost < 0) {
+            $_SESSION['error'] = "Biaya pengiriman tidak valid.";
+            header("Location: ?page=checkout");
+            exit;
+        }
+        $total += $shippingCost;
+
+        // Gabungkan alamat lengkap
+        $addressDetail = trim($_POST['shipping_address'] ?? '');
+        $locationParts = array_filter([
+            $_POST['district_name'] ?? '',
+            $_POST['city_name'] ?? '',
+            $_POST['province_name'] ?? ''
+        ]);
+        $fullAddress = $addressDetail;
+        if (!empty($locationParts)) {
+            $fullAddress .= ', ' . implode(', ', $locationParts);
+        }
+
         $data = [
             'user_id' => $user['id'],
             'total_amount' => $total,
             'payment_method' => $_POST['payment_method'] ?? 'cod',
-            'shipping_address' => $_POST['shipping_address'] ?? ''
+            'shipping_address' => $fullAddress
         ];
 
         $orderModel = new Order();
@@ -60,29 +82,55 @@ class CheckoutController
         $shippingModel = new Shipping();
         $productModel = new Product();
         $customModel = new CustomOrder();
+        $membership = new Memberships();
 
         try {
             $orderId = $orderModel->create($data, $cart);
 
-            // create payment record (pending)
+            // Buat record pembayaran (pending)
             $paymentModel->create($orderId, "midtrans", null, $total, "pending");
 
-            // create shipping record (status pending)
-            $courier = $_POST['courier'] ?? 'jne';
-            $shippingModel->create($orderId, $courier, 0);
+            // Simpan data pengiriman
+            $shippingModel->createShipping(
+                $orderId,
+                $_POST['shipping_courier'],
+                $shippingCost
+            );
 
-            // link custom orders (if any)
+            // Proses custom order & stok
             foreach ($cart as $it) {
                 if (!empty($it['custom_id'])) {
                     $customModel->linkToOrder($it['custom_id'], $orderId);
                 }
-                // kurangi stok
                 if (!empty($it['id'])) {
                     $productModel->reduceStock($it['id'], $it['qty']);
                 }
             }
 
-            // kosongkan cart session
+            // Pastikan membership ada
+            $membership->ensureMembership($_SESSION['user']['id']);
+
+            // Redeem poin (jika ada)
+            $redeem = (int) ($_POST['redeem_points'] ?? 0);
+            if ($redeem > 0) {
+                $membershipData = $membership->get($_SESSION['user']['id']);
+                if ($redeem <= $membershipData['points']) {
+                    $discount = $redeem * 1000; // 1 poin = Rp 1.000
+                    $newTotal = $total - $discount;
+                    if ($newTotal < 0)
+                        $newTotal = 0;
+
+                    // Update total di order & payment
+                    $orderModel->updateTotal($orderId, $newTotal);
+                    $paymentModel->updateAmount($orderId, $newTotal);
+
+                    $membership->deductPoints($_SESSION['user']['id'], $redeem);
+                    $_SESSION['success'] = "Berhasil redeem $redeem poin (Rp " . number_format($discount) . ")";
+                    $total = $newTotal; // update untuk log
+                }
+            }
+
+            // Kosongkan cart
             unset($_SESSION['cart']);
             $_SESSION['success'] = "Pesanan berhasil dibuat. ID: $orderId";
             header("Location: ?page=checkout_success&id=" . $orderId);

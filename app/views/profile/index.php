@@ -1,3 +1,8 @@
+<?php
+require_once __DIR__ . '/../../models/Memberships.php';
+$ms = new Memberships();
+$membership = $ms->get($_SESSION['user']['id']);
+?>
 <!doctype html>
 <html lang="id">
 
@@ -30,6 +35,11 @@
                         <div class="border rounded p-3 text-center text-muted">Tidak ada foto</div>
                     <?php endif; ?>
                     <input type="file" name="profile_image" class="form-control mt-2">
+                </div>
+                <div class="card p-3 mb-3">
+                    <h5>Membership</h5>
+                    <p>Tier: <strong><?= strtoupper($membership['tier']) ?></strong></p>
+                    <p>Poin: <strong><?= number_format($membership['points']) ?></strong></p>
                 </div>
                 <div class="col-md-9">
                     <div class="mb-3">

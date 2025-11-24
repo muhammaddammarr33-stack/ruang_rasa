@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../../models/Memberships.php';
+$ms = new Memberships();
+$membership = $ms->get($_SESSION['user']['id']);
 require_once __DIR__ . '/../../models/DB.php';
 $user = $_SESSION['user'];
 $db = DB::getInstance();
@@ -41,6 +44,7 @@ $orders = $stmt2->fetchAll();
                 </div>
             </div>
         </div>
+
 
         <h4 class="mt-5">Pesanan Terbaru</h4>
         <table class="table table-striped mt-3">

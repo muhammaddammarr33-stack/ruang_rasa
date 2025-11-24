@@ -72,4 +72,48 @@ class CartController
         exit;
     }
 
+    public function addToCartAjax()
+    {
+        header('Content-Type: application/json');
+
+        if (session_status() === PHP_SESSION_NONE)
+            session_start();
+
+        if (!isset($_SESSION['user'])) {
+            return json_encode(['success' => false, 'error' => 'Harus login']);
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $id = $input['id'] ?? null;
+
+        if (!$id) {
+            return json_encode(['success' => false, 'error' => 'ID produk tidak valid']);
+        }
+
+        $product = $this->productModel->find($id);
+        if (!$product) {
+            return json_encode(['success' => false, 'error' => 'Produk tidak ditemukan']);
+        }
+
+        $priceData = $this->productModel->getFinalPrice($id);
+        $finalPrice = $priceData['final_price'];
+        $discountPercent = $priceData['discount_percent'];
+
+        if (isset($_SESSION['cart'][$id])) {
+            $_SESSION['cart'][$id]['qty']++;
+        } else {
+            $_SESSION['cart'][$id] = [
+                'id' => $product['id'],
+                'name' => $product['name'],
+                'price' => $finalPrice,
+                'discount_percent' => $discountPercent,
+                'qty' => 1
+            ];
+        }
+
+        return json_encode([
+            'success' => true,
+            'message' => htmlspecialchars($product['name']) . ' ditambahkan ke keranjang!'
+        ]);
+    }
 }

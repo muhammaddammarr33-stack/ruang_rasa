@@ -236,6 +236,28 @@ class ProductController
             $p['base_price'] = $priceData['base_price'];
             $products[] = $p;
         }
+        // 🔥 Tambahkan hitung unread count di sini
+        $unreadConsultations = 0;
+        if (isset($_SESSION['user'])) {
+            $userId = $_SESSION['user']['id'];
+            // Hitung langsung di sini (tanpa buat instance controller)
+            $db = DB::getInstance();
+            $stmt = $db->prepare("
+            SELECT c.id,
+                   (SELECT COUNT(*) FROM consultation_messages m2 
+                    WHERE m2.consultation_id = c.id 
+                    AND m2.sender_id != ? 
+                    AND (m2.created_at > c.last_read_at OR c.last_read_at IS NULL)
+                   ) as unread
+            FROM consultations c
+            WHERE c.user_id = ? AND c.status IN ('suggested', 'in_progress')
+        ");
+            $stmt->execute([$userId, $userId]);
+            $rows = $stmt->fetchAll();
+            foreach ($rows as $r) {
+                $unreadConsultations += (int) $r['unread'];
+            }
+        }
 
         include __DIR__ . '/../views/landing/products.php';
     }

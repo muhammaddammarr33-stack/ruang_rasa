@@ -8,13 +8,13 @@ if (empty($cart)) {
     exit;
 }
 
-// compute totals
-$total = 0;
+// Hitung total produk (tanpa ongkir)
+$productTotal = 0;
 foreach ($cart as $item) {
     $price = $item['price'];
     $discount = isset($item['discount']) ? (float) $item['discount'] : 0;
     $finalPrice = $discount > 0 ? ($price - ($price * $discount / 100)) : $price;
-    $total += $finalPrice * $item['qty'];
+    $productTotal += $finalPrice * $item['qty'];
 }
 ?>
 
@@ -197,7 +197,15 @@ foreach ($cart as $item) {
             <!-- Form Checkout -->
             <div class="col-md-7">
                 <div class="checkout-card">
-                    <form method="post" action="?page=checkout_process">
+                    <form id="checkout-form" method="post" action="?page=checkout_process">
+                        <!-- Hidden input for product total (used by JS) -->
+                        <input type="hidden" id="product_total" value="<?= $productTotal ?>">
+
+                        <!-- Hidden inputs for location names -->
+                        <input type="hidden" name="province_name" id="province_name">
+                        <input type="hidden" name="city_name" id="city_name">
+                        <input type="hidden" name="district_name" id="district_name">
+
                         <div class="mb-4">
                             <label class="form-label">Nama Penerima</label>
                             <input type="text" name="recipient_name" class="form-control" required
@@ -206,20 +214,59 @@ foreach ($cart as $item) {
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label">Alamat Pengiriman Lengkap</label>
-                            <textarea name="shipping_address" class="form-control" rows="4" required
-                                placeholder="Contoh: Jl. Mawar No. 10, Kel. Sukajadi, Bandung"><?= htmlspecialchars($_POST['shipping_address'] ?? '') ?></textarea>
+                            <label class="form-label">Alamat Pengiriman Lengkap (Nomor, Jalan, Gedung, dll)</label>
+                            <textarea name="shipping_address" class="form-control" rows="3" required
+                                placeholder="Contoh: Jl. Mawar No. 10, Gedung Anggrek Lt. 3"><?= htmlspecialchars($_POST['shipping_address'] ?? '') ?></textarea>
+                            <small class="form-text text-muted">Alamat detail tanpa nama kota/provinsi</small>
                         </div>
 
-                        <div class="mb-4">
-                            <label class="form-label">Kurir Pengiriman</label>
-                            <select name="courier" class="form-select" required>
-                                <option value="">-- Pilih Kurir --</option>
-                                <option value="jne">JNE (1-2 hari)</option>
-                                <option value="tiki">TIKI (2-3 hari)</option>
-                                <option value="pos">POS Indonesia (3-5 hari)</option>
-                                <option value="gojek">GO-SEND (Hari ini)</option>
-                            </select>
+                        <h4>Informasi Pengiriman</h4>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Provinsi</label>
+                                <select id="province" class="form-select">
+                                    <option value="">Pilih Provinsi</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Kota / Kabupaten</label>
+                                <select id="city" name="shipping_city" class="form-select" disabled>
+                                    <option value="">Pilih Kota/Kabupaten</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="district" class="form-label">Kecamatan (District)</label>
+                                <select id="district" name="district_id" class="form-select" disabled>
+                                    <option value="">Pilih Kecamatan</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <label>Kurir</label>
+                                <select id="courier" class="form-select">
+                                    <option value="">Pilih Kurir</option>
+                                    <option value="jne">JNE</option>
+                                    <option value="tiki">TIKI</option>
+                                    <option value="pos">POS</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label>Layanan</label>
+                                <select id="service" class="form-select"></select>
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="shipping_courier" id="shipping_courier">
+                        <input type="hidden" name="shipping_cost" id="shipping_cost">
+
+                        <div class="mt-3">
+                            <strong>Total Ongkir:</strong> <span id="ongkir_total">Rp0</span>
                         </div>
 
                         <div class="mb-4">
@@ -249,9 +296,10 @@ foreach ($cart as $item) {
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-checkout">
+                        <button type="submit" class="btn btn-checkout" id="checkout-btn">
                             <i class="fas fa-check-circle me-2"></i>
-                            Bayar & Kirim Kejutan — Rp <?= number_format($total, 0, ',', '.') ?>
+                            Bayar & Kirim Kejutan — <span id="btn-total">Rp
+                                <?= number_format($productTotal, 0, ',', '.') ?></span>
                         </button>
                     </form>
                 </div>
@@ -281,12 +329,233 @@ foreach ($cart as $item) {
                     </ul>
                     <div class="total-row d-flex justify-content-between">
                         <span>Total Pembayaran</span>
-                        <span>Rp <?= number_format($total, 0, ',', '.') ?></span>
+                        <span id="summary-total">Rp <?= number_format($productTotal, 0, ',', '.') ?></span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // --- Elemen DOM ---
+            const provinceSelect = document.querySelector("#province");
+            const citySelect = document.querySelector("#city");
+            const districtSelect = document.querySelector("#district");
+            const courierSelect = document.querySelector("#courier");
+            const serviceSelect = document.querySelector("#service");
+            const ongkirTotalEl = document.querySelector("#ongkir_total");
+            const btnTotalEl = document.querySelector("#btn-total");
+            const summaryTotalEl = document.querySelector("#summary-total");
+            const productTotal = parseInt(document.getElementById('product_total').value);
+            const form = document.getElementById('checkout-form');
+
+            // Hidden inputs for location names
+            const provinceNameInput = document.getElementById('province_name');
+            const cityNameInput = document.getElementById('city_name');
+            const districtNameInput = document.getElementById('district_name');
+
+            // Reset select
+            function resetSelect(selectElement, placeholderText, disable = true) {
+                selectElement.innerHTML = `<option value="">${placeholderText}</option>`;
+                selectElement.disabled = disable;
+                if (selectElement === serviceSelect) {
+                    ongkirTotalEl.innerText = "Rp0";
+                    updateFinalTotal(0);
+                }
+            }
+
+            resetSelect(citySelect, "Pilih Kota/Kabupaten");
+            resetSelect(serviceSelect, "Pilih Layanan");
+
+            // Load provinces
+            provinceSelect.innerHTML = `<option value="">Memuat Provinsi...</option>`;
+            fetch("?page=shipping_provinces")
+                .then(res => res.json())
+                .then(res => {
+                    provinceSelect.innerHTML = "<option value=''>Pilih Provinsi</option>";
+                    if (res.data?.length) {
+                        res.data.forEach(p => {
+                            provinceSelect.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error("Error loading provinces:", err);
+                    provinceSelect.innerHTML = `<option value="">(Error)</option>`;
+                    provinceSelect.disabled = true;
+                });
+
+            // Load cities & update province name
+            provinceSelect.addEventListener("change", function () {
+                const prov = this.value;
+                resetSelect(citySelect, "Memuat Kota...");
+                resetSelect(serviceSelect, "Pilih Layanan");
+
+                // Simpan nama provinsi
+                provinceNameInput.value = prov ? this.options[this.selectedIndex].text : '';
+
+                if (!prov) {
+                    resetSelect(citySelect, "Pilih Kota/Kabupaten");
+                    cityNameInput.value = '';
+                    districtNameInput.value = '';
+                    return;
+                }
+
+                fetch(`?page=shipping_cities&province_id=${prov}`)
+                    .then(res => res.json())
+                    .then(res => {
+                        citySelect.innerHTML = "<option value=''>Pilih Kota/Kabupaten</option>";
+                        if (res.data?.length) {
+                            res.data.forEach(c => {
+                                citySelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+                            });
+                            citySelect.disabled = false;
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error loading cities:", err);
+                        resetSelect(citySelect, "Error");
+                    });
+            });
+
+            // Load districts & update city name
+            citySelect.addEventListener("change", function () {
+                const city = this.value;
+                resetSelect(districtSelect, "Memuat Kecamatan...");
+                resetSelect(serviceSelect, "Pilih Layanan");
+
+                // Simpan nama kota
+                cityNameInput.value = city ? this.options[this.selectedIndex].text : '';
+
+                if (!city) {
+                    resetSelect(districtSelect, "Pilih Kecamatan");
+                    districtNameInput.value = '';
+                    return;
+                }
+
+                fetch(`?page=shipping_districts&city_id=${city}`)
+                    .then(res => res.json())
+                    .then(res => {
+                        districtSelect.innerHTML = "<option value=''>Pilih Kecamatan</option>";
+                        if (res.data?.length) {
+                            res.data.forEach(d => {
+                                districtSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`;
+                            });
+                            districtSelect.disabled = false;
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error loading districts:", err);
+                        resetSelect(districtSelect, "Error");
+                    });
+            });
+
+            // Update district name
+            districtSelect.addEventListener("change", function () {
+                districtNameInput.value = this.value ? this.options[this.selectedIndex].text : '';
+            });
+
+            // Calculate shipping cost
+            function calculateCost() {
+                const destination = districtSelect.value;
+                const courier = courierSelect.value;
+
+                resetSelect(serviceSelect, "Memuat Biaya...");
+                updateFinalTotal(0);
+
+                if (!destination || !courier) {
+                    resetSelect(serviceSelect, "Pilih Kurir & Kota");
+                    return;
+                }
+
+                const weight = 1;
+                const form = new FormData();
+                form.append("destination", destination);
+                form.append("weight", weight);
+                form.append("courier", courier);
+
+                fetch("?page=shipping_cost", {
+                    method: "POST",
+                    body: form
+                })
+                    .then(res => res.json())
+                    .then(res => {
+                        serviceSelect.innerHTML = "";
+                        let found = false;
+
+                        if (Array.isArray(res.data)) {
+                            res.data.forEach(item => {
+                                if (item.service && item.cost !== undefined) {
+                                    found = true;
+                                    const cost = item.cost;
+                                    const etd = item.etd || "?";
+                                    serviceSelect.innerHTML += `
+                                        <option value="${cost}" data-service="${item.service}">
+                                            ${item.service} - Rp${new Intl.NumberFormat('id-ID').format(cost)} (${etd} hari)
+                                        </option>
+                                    `;
+                                }
+                            });
+                        }
+
+                        if (found) {
+                            serviceSelect.disabled = false;
+                            serviceSelect.dispatchEvent(new Event('change'));
+                        } else {
+                            resetSelect(serviceSelect, "Tidak Tersedia");
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error calculating cost:", err);
+                        resetSelect(serviceSelect, "Error");
+                    });
+            }
+
+            courierSelect.addEventListener("change", calculateCost);
+            citySelect.addEventListener("change", calculateCost);
+            districtSelect.addEventListener("change", calculateCost);
+
+            // Update ongkir & total
+            serviceSelect.addEventListener("change", function () {
+                const cost = this.value ? parseInt(this.value) : 0;
+                const service = this.selectedOptions[0]?.dataset.service || '';
+
+                document.querySelector("#shipping_courier").value = cost ? (courierSelect.value.toUpperCase() + " - " + service) : "";
+                document.querySelector("#shipping_cost").value = cost;
+                ongkirTotalEl.innerText = "Rp" + new Intl.NumberFormat('id-ID').format(cost);
+                updateFinalTotal(cost);
+            });
+
+            // Fungsi update total akhir
+            function updateFinalTotal(shippingCost) {
+                const final = productTotal + shippingCost;
+                btnTotalEl.textContent = "Rp" + new Intl.NumberFormat('id-ID').format(final);
+                summaryTotalEl.textContent = "Rp" + new Intl.NumberFormat('id-ID').format(final);
+            }
+
+            // Validasi sebelum submit
+            form.addEventListener('submit', function (e) {
+                const shippingCost = document.getElementById('shipping_cost').value;
+                if (!shippingCost || parseInt(shippingCost) <= 0) {
+                    alert('Silakan pilih layanan pengiriman terlebih dahulu.');
+                    e.preventDefault();
+                    return false;
+                }
+
+                // Validasi alamat lengkap
+                if (!districtSelect.value || !citySelect.value || !provinceSelect.value) {
+                    alert('Silakan lengkapi alamat pengiriman (Provinsi, Kota, Kecamatan).');
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

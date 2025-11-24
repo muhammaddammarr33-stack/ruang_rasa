@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../models/Order.php';
 require_once __DIR__ . '/../models/Payment.php';
+require_once __DIR__ . '/../models/Memberships.php';
 
 // load config dengan cek keberadaan file
 $configPath = __DIR__ . '/../config_midtrans.php';
@@ -43,12 +44,24 @@ class PaymentController
         $orderItems = $orderModel->getItems($orderId);
         $items = [];
 
+        // Tambahkan produk
         foreach ($orderItems as $it) {
             $items[] = [
-                'id' => $it['product_id'],
+                'id' => 'product-' . $it['product_id'],
                 'price' => (float) $it['price'],
                 'quantity' => (int) $it['quantity'],
                 'name' => $it['product_name']
+            ];
+        }
+
+        // 🔑 Tambahkan ONGKIR sebagai item terpisah
+        $shipping = $orderModel->getShipping($orderId);
+        if ($shipping && isset($shipping['shipping_cost']) && $shipping['shipping_cost'] > 0) {
+            $items[] = [
+                'id' => 'shipping-' . $orderId,
+                'price' => (float) $shipping['shipping_cost'],
+                'quantity' => 1,
+                'name' => 'Ongkos Kirim (' . ($shipping['courier'] ?? 'JNE') . ')'
             ];
         }
 
@@ -94,6 +107,7 @@ class PaymentController
 
         $paymentModel = new Payment();
         $orderModel = new Order();
+        $membership = new Memberships();
 
         // Ambil data payment berdasarkan order_id
         $payment = $paymentModel->getByOrder($orderId);
@@ -118,6 +132,15 @@ class PaymentController
             // update orders table
             $orderModel->updatePaymentStatus($orderId, 'paid');
             $orderModel->updateOrderStatus($orderId, 'processing');
+
+            // contoh: gunakan total order sebagai poin dasar
+            $order = $orderModel->find($orderId);
+            $amount = (int) $order['total_amount'];
+
+            // misal 1 poin untuk tiap Rp 10.000
+            $points = floor($amount / 10000);
+
+            $membership->addPoints($order['user_id'], $points);
 
         } elseif ($transactionStatus === 'pending') {
 

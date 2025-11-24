@@ -49,4 +49,10 @@ class Payment
         return $stmt->execute([$transactionId, $status, $paymentType, $orderId]);
     }
 
+    public function updateAmount($orderId, $newAmount)
+    {
+        $stmt = $this->db->prepare("UPDATE payments SET amount = ? WHERE order_id = ?");
+        return $stmt->execute([$newAmount, $orderId]);
+    }
+
 }

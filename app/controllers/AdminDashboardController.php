@@ -1,21 +1,10 @@
 <?php
 // app/controllers/AdminDashboardController.php
-require_once __DIR__ . '/../models/Product.php';
-require_once __DIR__ . '/../models/Orders.php';
-require_once __DIR__ . '/../models/Promotions.php';
-require_once __DIR__ . '/../models/Consultation.php';
-require_once __DIR__ . '/../models/CustomOrder.php';
-require_once __DIR__ . '/../models/Memberships.php';
+require_once __DIR__ . '/../models/Order.php';
 
 class AdminDashboardController
 {
-    private $productModel;
     private $orderModel;
-    private $promoModel;
-    private $consultModel;
-    private $customModel;
-    private $memberModel;
-
     public function __construct()
     {
         if (session_status() === PHP_SESSION_NONE)
@@ -24,25 +13,128 @@ class AdminDashboardController
             header("Location: ?page=login");
             exit;
         }
-
-        $this->productModel = new Product();
-        $this->orderModel = new Orders();
-        $this->promoModel = new Promotions();
-        $this->consultModel = new Consultation();
-        $this->customModel = new CustomOrder();
-        $this->memberModel = new Memberships();
+        $this->orderModel = new Order();
     }
 
+    // render dashboard page (initial load)
     public function index()
     {
-        // statistik cepat
-        $totalProducts = count($this->productModel->all());
-        $totalOrders = count($this->orderModel->all());
-        $totalPromos = count($this->promoModel->allActive());
-        $totalConsult = count($this->consultModel->all());
-        $totalCustom = count($this->customModel->allByUser(1)); // placeholder
-        $totalMembers = count($this->memberModel->all());
+        // default range: last 7 days
+        $end = date('Y-m-d');
+        $start = date('Y-m-d', strtotime('-6 days'));
+
+        // prepare data for initial render
+        $metrics = $this->gatherMetrics($start, $end);
+        $salesChart = $this->orderModel->dailyTrend($start, $end);
+        $topProducts = $this->orderModel->topProductsBetween($start, $end, 6);
+        $topCategories = $this->orderModel->topCategoriesBetween($start, $end, 6);
+        $recentOrders = $this->orderModel->recentOrders(10);
 
         include __DIR__ . '/../views/admin/dashboard.php';
+    }
+
+    // returns JSON for AJAX when changing range
+    public function data()
+    {
+        $start = $_GET['start'] ?? null;
+        $end = $_GET['end'] ?? null;
+        if (!$start || !$end) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid range']);
+            exit;
+        }
+
+        $metrics = $this->gatherMetrics($start, $end);
+        $trend = $this->orderModel->dailyTrend($start, $end);
+        $topProducts = $this->orderModel->topProductsBetween($start, $end, 10);
+        $topCategories = $this->orderModel->topCategoriesBetween($start, $end, 6);
+        $recentOrders = $this->orderModel->recentOrders(10);
+
+        // prepare series arrays
+        $labels = array_keys($trend);
+        $revenueSeries = array_map(function ($v) {
+            return $v['revenue'];
+        }, $trend);
+        $ordersSeries = array_map(function ($v) {
+            return $v['orders'];
+        }, $trend);
+
+        echo json_encode([
+            'metrics' => $metrics,
+            'labels' => $labels,
+            'revenue' => $revenueSeries,
+            'orders' => $ordersSeries,
+            'topProducts' => $topProducts,
+            'topCategories' => $topCategories,
+            'recentOrders' => $recentOrders
+        ]);
+        exit;
+    }
+
+    // small activity feed endpoint
+    public function activity()
+    {
+        // recent orders (5) and new users (5) combined
+        $rows = $this->orderModel->recentOrders(5);
+        // simplified feed
+        $feed = [];
+        foreach ($rows as $r) {
+            $feed[] = [
+                'type' => 'order',
+                'text' => "Order #{$r['id']} baru (Rp " . number_format($r['total_amount'], 0, ',', '.') . ")",
+                'time' => $r['created_at']
+            ];
+        }
+        // new users
+        $stmt = $this->orderModel->db->prepare("SELECT id, name, created_at FROM users ORDER BY created_at DESC LIMIT 5");
+        $stmt->execute();
+        $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($users as $u) {
+            $feed[] = [
+                'type' => 'user',
+                'text' => "User baru: {$u['name']}",
+                'time' => $u['created_at']
+            ];
+        }
+        // sort by time desc
+        usort($feed, function ($a, $b) {
+            return strtotime($b['time']) - strtotime($a['time']);
+        });
+        echo json_encode(array_slice($feed, 0, 10));
+        exit;
+    }
+
+    // helper to compute metrics + previous period comparison
+    private function gatherMetrics($start, $end)
+    {
+        $startPrev = date('Y-m-d', strtotime($start . ' -' . ((strtotime($end) - strtotime($start)) / 86400 + 1) . ' days'));
+        $endPrev = date('Y-m-d', strtotime($start . ' -1 day'));
+
+        $rev = $this->orderModel->revenueBetween($start, $end);
+        $orders = $this->orderModel->ordersBetween($start, $end);
+        $aov = $this->orderModel->avgOrderValueBetween($start, $end);
+        $items = $this->orderModel->itemsSoldBetween($start, $end);
+        $newCustomers = $this->orderModel->newCustomersBetween($start, $end);
+
+        $revPrev = $this->orderModel->revenueBetween($startPrev, $endPrev);
+        $ordersPrev = $this->orderModel->ordersBetween($startPrev, $endPrev);
+        $aovPrev = $this->orderModel->avgOrderValueBetween($startPrev, $endPrev);
+        $itemsPrev = $this->orderModel->itemsSoldBetween($startPrev, $endPrev);
+        $newCustomersPrev = $this->orderModel->newCustomersBetween($startPrev, $endPrev);
+
+        return [
+            'revenue' => $rev,
+            'orders' => $orders,
+            'aov' => $aov,
+            'items' => $items,
+            'new_customers' => $newCustomers,
+            'compare' => [
+                'revenue_prev' => $revPrev,
+                'orders_prev' => $ordersPrev,
+                'aov_prev' => $aovPrev,
+                'items_prev' => $itemsPrev,
+                'new_customers_prev' => $newCustomersPrev
+            ]
+        ];
     }
 }

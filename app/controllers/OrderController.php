@@ -17,24 +17,24 @@ class OrderController
 
     // 🔹 Menampilkan riwayat pesanan user
     public function history()
-{
-    if (!isset($_SESSION['user'])) {
-        header("Location: ?page=login");
-        exit;
+    {
+        if (!isset($_SESSION['user'])) {
+            header("Location: ?page=login");
+            exit;
+        }
+
+        $userId = $_SESSION['user']['id'];
+
+        $orders = $this->orderModel->getByUser($userId);
+
+        // kirim custom order per order
+        $customOrdersByOrder = [];
+        foreach ($orders as $o) {
+            $customOrdersByOrder[$o['id']] = $this->customModel->getByOrderId($o['id']);
+        }
+
+        include __DIR__ . '/../views/user/orders.php';
     }
-
-    $userId = $_SESSION['user']['id'];
-
-    $orders = $this->orderModel->getByUser($userId);
-
-    // kirim custom order per order
-    $customOrdersByOrder = [];
-    foreach ($orders as $o) {
-        $customOrdersByOrder[$o['id']] = $this->customModel->getByOrderId($o['id']);
-    }
-
-    include __DIR__ . '/../views/user/orders.php';
-}
 
 
     // 🔹 Menampilkan detail pesanan user
@@ -46,9 +46,21 @@ class OrderController
         }
 
         $orderId = $_GET['id'] ?? 0;
+
+        // Pastikan order milik user ini
         $order = $this->orderModel->find($orderId);
+        if (!$order || $order['user_id'] != $_SESSION['user']['id']) {
+            $_SESSION['error'] = "Pesanan tidak ditemukan.";
+            header("Location: ?page=orders");
+            exit;
+        }
+
         $items = $this->orderModel->getItems($orderId);
         $customOrders = $this->customModel->getByOrderId($orderId);
+
+        // 🔑 TAMBAHKAN INI: ambil data shipping
+        $shipping = $this->orderModel->getShipping($orderId); // Bisa null jika belum ada
+
         include __DIR__ . '/../views/user/order_detail.php';
     }
 }

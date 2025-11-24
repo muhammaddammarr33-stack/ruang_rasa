@@ -1,4 +1,10 @@
 <!-- app/views/user/order_detail.php -->
+<?php
+// Fallback jika variabel tidak dikirim (untuk keamanan)
+$shipping = $shipping ?? null;
+$items = $items ?? [];
+$customOrders = $customOrders ?? [];
+?>
 <!doctype html>
 <html lang="id">
 
@@ -138,6 +144,11 @@
         .section-title i {
             color: var(--soft-blue);
         }
+
+        .text-soft-blue {
+            color: var(--soft-blue) !important;
+            font-weight: 700;
+        }
     </style>
 </head>
 
@@ -176,6 +187,20 @@
                         <span class="text-muted"><?= nl2br(htmlspecialchars($order['shipping_address'])) ?></span>
                     </p>
                 </div>
+                <h4>Informasi Pengiriman</h4>
+
+                <?php if (!empty($shipping)): ?>
+                    <p><strong>Kurir:</strong> <b><?= htmlspecialchars($shipping['courier']) ?></b></p>
+                    <p><strong>Ongkir:</strong> Rp <?= number_format($shipping['shipping_cost'], 0, ',', '.') ?></p>
+                    <p><strong>Status Pengiriman:</strong> <b><?= htmlspecialchars(strtoupper($shipping['status'])) ?></b>
+                    </p>
+                    <?php if (!empty($shipping['tracking_number'])): ?>
+                        <p><strong>Nomor Resi:</strong> <?= htmlspecialchars($shipping['tracking_number']) ?></p>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <p>Belum ada data pengiriman.</p>
+                <?php endif; ?>
+
             </div>
         </div>
 
@@ -193,9 +218,11 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php $total = 0; ?>
-                        <?php foreach ($items as $it): ?>
-                            <?php $total += $it['subtotal']; ?>
+                        <?php
+                        $subtotal = 0;
+                        foreach ($items as $it):
+                            $subtotal += $it['subtotal'];
+                            ?>
                             <tr>
                                 <td><?= htmlspecialchars($it['product_name']) ?></td>
                                 <td>Rp <?= number_format($it['price'], 0, ',', '.') ?></td>
@@ -203,11 +230,26 @@
                                 <td>Rp <?= number_format($it['subtotal'], 0, ',', '.') ?></td>
                             </tr>
                         <?php endforeach; ?>
+
+                        <!-- Baris Ongkos Kirim -->
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Ongkos Kirim</strong></td>
+                            <td>
+                                <?php if (!empty($shipping)): ?>
+                                    Rp <?= number_format((int) $shipping['shipping_cost'], 0, ',', '.') ?>
+                                <?php else: ?>
+                                    <span class="text-muted">–</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
                     </tbody>
                     <tfoot>
-                        <tr>
-                            <th colspan="3" class="text-end">Total Pembayaran:</th>
-                            <th>Rp <?= number_format($total, 0, ',', '.') ?></th>
+                        <tr class="table-active">
+                            <th colspan="3" class="text-end">Total Pembayaran</th>
+                            <th class="text-soft-blue">
+                                Rp
+                                <?= number_format($subtotal + (!empty($shipping) ? (int) $shipping['shipping_cost'] : 0), 0, ',', '.') ?>
+                            </th>
                         </tr>
                     </tfoot>
                 </table>

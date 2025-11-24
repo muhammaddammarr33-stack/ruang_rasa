@@ -75,25 +75,16 @@ $user = $_SESSION['user'] ?? null;
 
         /* 🔹 Hero */
         .hero {
-            background: var(--off-white);
-            padding: 4rem 0 3rem;
-            text-align: center;
+            margin-bottom: 3rem;
         }
 
-        .hero h1 {
-            font-weight: 700;
-            font-size: 2.2rem;
-            color: var(--dark-grey);
-            max-width: 700px;
-            margin: 0 auto 1.2rem;
-            line-height: 1.3;
+        .hero-thumbnails button {
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        .hero p.lead {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            max-width: 600px;
-            margin: 0 auto 2rem;
+        .hero-thumbnails button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
 
         .btn-special {
@@ -101,16 +92,24 @@ $user = $_SESSION['user'] ?? null;
             color: white;
             font-weight: 600;
             border: none;
-            padding: 0.85rem 2.2rem;
-            border-radius: 14px;
-            font-size: 1.05rem;
-            box-shadow: 0 4px 12px rgba(121, 161, 191, 0.3);
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(121, 161, 191, 0.4);
             transition: transform 0.3s, box-shadow 0.3s;
         }
 
         .btn-special:hover {
             transform: translateY(-3px);
-            box-shadow: 0 6px 16px rgba(121, 161, 191, 0.4);
+            box-shadow: 0 6px 20px rgba(121, 161, 191, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem !important;
+            }
+
+            .lead {
+                font-size: 1rem !important;
+            }
         }
 
         /* 🔹 Section Umum */
@@ -267,94 +266,179 @@ $user = $_SESSION['user'] ?? null;
 </head>
 
 <body>
-    <!-- 🔹 Navbar — dirapikan dengan ikon & teks lebih profesional -->
-    <nav class="navbar navbar-expand-lg">
-        <div class="container">
-            <a class="navbar-brand" href="?page=landing">
-                <i class="fas fa-gift"></i> Ruang Rasa
+    <!-- 🔹 Navbar — Logo diperbesar & tampilan profesional -->
+    <nav class="navbar navbar-expand-lg"
+        style="padding: 0.5rem 0; background-color: #F5F5EC; box-shadow: 0 1px 4px rgba(0,0,0,0.05);">
+        <div class="container d-flex align-items-center">
+            <!-- Logo: lebih kecil, tanpa background, tanpa padding berlebih -->
+            <a class="navbar-brand d-flex align-items-center" href="?page=landing">
+                <img src="uploads/bhot1.png" alt="Ruang Rasa" style="
+                height: 36px;
+                width: auto;
+                object-fit: contain;
+                /* Tidak ada background, tidak ada padding internal */
+                " class="me-3">
             </a>
-            <div class="d-flex align-items-center flex-wrap gap-1">
+
+            <!-- Menu & Tombol -->
+            <div class="d-flex align-items-center flex-wrap gap-2 ms-auto">
                 <?php if ($user): ?>
-                    <span class="me-2 d-none d-md-inline text-muted">Halo,
-                        <b><?= htmlspecialchars($user['name'] ?? 'Teman') ?></b></span>
-                    <a href="?page=promotions" class="btn btn-outline-secondary btn-sm" title="Promo">
+                    <span class="d-none d-md-inline" style="color: #343D46; font-size: 0.9rem;">
+                        Halo, <b><?= htmlspecialchars($user['name'] ?? 'Teman') ?></b>
+                    </span>
+                    <!-- Di navbar landing -->
+                    <a href="?page=consultations" class="position-relative">
+                        💬 Konsultasi
+                        <?php if (!empty($unreadConsultations) && $unreadConsultations > 0): ?>
+                            <span class="badge bg-danger rounded-pill"
+                                style="position: absolute; top: -5px; right: -10px; font-size: 0.7em;">
+                                <?= $unreadConsultations ?>
+                            </span>
+                        <?php endif; ?>
+                    </a>
+                    <a href="?page=promotions" class="btn btn-sm"
+                        style="color: #79A1BF; border: 1px solid #79A1BF; background: transparent;" title="Promo">
                         <i class="fas fa-bolt"></i>
                     </a>
-                    <a href="?page=profile" class="btn btn-outline-secondary btn-sm" title="Profil">
+                    <a href="?page=profile" class="btn btn-sm"
+                        style="color: #79A1BF; border: 1px solid #79A1BF; background: transparent;" title="Profil">
                         <i class="fas fa-user"></i>
                     </a>
-                    <a href="?page=orders" class="btn btn-outline-secondary btn-sm" title="Riwayat Pesanan">
+                    <a href="?page=orders" class="btn btn-sm"
+                        style="color: #79A1BF; border: 1px solid #79A1BF; background: transparent;" title="Riwayat Pesanan">
                         <i class="fas fa-box-open"></i>
                     </a>
-                    <a href="?page=cart" class="btn btn-outline-secondary btn-sm" title="Keranjang">
+                    <a href="?page=cart" class="btn btn-sm"
+                        style="color: #79A1BF; border: 1px solid #79A1BF; background: transparent;" title="Keranjang">
                         <i class="fas fa-shopping-cart"></i>
                     </a>
                     <?php if (($user['role'] ?? '') === 'admin'): ?>
-                        <a href="?page=admin_dashboard" class="btn btn-outline-dark btn-sm" title="Dashboard Admin">
+                        <a href="?page=admin_dashboard" class="btn btn-sm"
+                            style="color: #343D46; border: 1px solid #343D46; background: transparent;" title="Dashboard Admin">
                             <i class="fas fa-cog"></i>
                         </a>
                     <?php endif; ?>
-                    <a href="?page=logout" class="btn btn-sm"
-                        style="background-color: var(--soft-peach); color: white; border: none;" title="Keluar">
+                    <a href="?page=logout" class="btn btn-sm" style="background-color: #E7A494; color: white; border: none;"
+                        title="Keluar">
                         <i class="fas fa-sign-out-alt"></i>
                     </a>
                 <?php else: ?>
-                    <a href="?page=login" class="btn btn-outline-primary btn-sm">Masuk</a>
-                    <a href="?page=register" class="btn btn-primary btn-sm">Daftar</a>
+                    <a href="?page=login" class="btn btn-sm"
+                        style="color: #79A1BF; border: 1px solid #79A1BF; background: transparent;">
+                        Masuk
+                    </a>
+                    <a href="?page=register" class="btn btn-sm"
+                        style="background-color: #79A1BF; color: white; border: none;">
+                        Daftar
+                    </a>
                 <?php endif; ?>
             </div>
         </div>
     </nav>
 
-    <!-- 🔹 Hero Section -->
-    <section class="hero">
-        <div class="container">
-            <div class="text-center mb-5">
-                <h1>Kirim Hadiah Penuh Makna untuk Pasangan LDR-mu 💞</h1>
-                <p class="lead text-muted">
-                    Personalisasi kado, kirim surat digital, atau atur kejutan di hari spesial — semua bisa dari jarak
-                    jauh.
-                </p>
-            </div>
-
-            <div class="hero-video-container">
-                <video id="mainVideo" controls playsinline poster="public/videos/poster-hero.jpg">
-                    <source src="videos/hero-5.mp4" type="video/mp4">
-                    Browser Anda tidak mendukung pemutar video.
+    <!-- 🔹 Hero Section — Auto-play dengan Suara, Warna Harmonis -->
+    <section class="hero position-relative overflow-hidden" style="background-color: var(--off-white);">
+        <div class="position-relative mx-auto" style="height: 80vh; max-height: 700px; width: 95%; max-width: 1400px;">
+            <!-- Background brand di luar area video -->
+            <div class="w-100 h-100 d-flex justify-content-center align-items-center"
+                style="background-color: var(--off-white);">
+                <video id="mainVideo" class="w-100 h-100" autoplay muted playsinline poster="videos/poster-hero.jpg"
+                    style="object-fit: contain; background: #000;" controls controlsList="nodownload">
+                    <source src="videos/hero-1.mp4" type="video/mp4">
+                    Browser Anda tidak mendukung video.
                 </video>
             </div>
 
-            <div class="hero-thumbnails">
-                <?php
-                $videos = [
-                    ['src' => 'videos/hero-5.mp4', 'title' => 'Cerita dari Hati'],
-                    ['src' => 'videos/hero-6.mp4', 'title' => 'Surat Digital'],
-                    ['src' => 'videos/hero-7.mp4', 'title' => 'Unboxing Anniversary'],
-                    ['src' => 'videos/hero-8.mp4', 'title' => 'Personalisasi Kado']
-                ];
-                foreach ($videos as $vid): ?>
-                    <button type="button" title="<?= htmlspecialchars($vid['title']) ?>"
-                        onclick="changeVideo('<?= htmlspecialchars($vid['src']) ?>')">
-                        <video muted preload="none">
-                            <source src="<?= htmlspecialchars($vid['src']) ?>" type="video/mp4">
-                        </video>
-                    </button>
-                <?php endforeach; ?>
-            </div>
-
-            <div class="text-center mt-4">
-                <a href="?page=products" class="btn btn-special">Jelajahi Koleksi Hadiah</a>
+            <!-- Overlay teks dengan warna disesuaikan -->
+            <div
+                class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center text-center px-3">
+                <div class="max-w-lg">
+                    <h1 class="fw-bold mb-3 text-white"
+                        style="font-size: 2.4rem; line-height: 1.2; text-shadow: 0 2px 8px rgba(0,0,0,0.7);">
+                        Kirim Cinta yang Bisa Dirasakan, Meski Jarak Memisahkan 💞
+                    </h1>
+                    <p class="lead opacity-90 mb-4 text-white"
+                        style="font-size: 1.2rem; text-shadow: 0 1px 4px rgba(0,0,0,0.6);">
+                        Hadiah personal, surat digital, dan kejutan spesial — semua dirancang untuk menyampaikan rasa
+                        dari jarak jauh.
+                    </p>
+                    <a href="?page=products" class="btn btn-special px-4 py-2" style="font-size: 1.1rem;">
+                        <i class="fas fa-gift me-2"></i> Jelajahi Kado Spesial
+                    </a>
+                </div>
             </div>
         </div>
     </section>
 
-    <script>
-        function changeVideo(src) {
-            const mainVideo = document.getElementById('mainVideo');
-            mainVideo.src = src;
-            mainVideo.load();
-            mainVideo.play();
+    <style>
+        :root {
+            --off-white: #F5F5EC;
+            --soft-blue: #79A1BF;
+            --soft-peach: #E7A494;
+            --dark-grey: #343D46;
         }
+
+        .hero {
+            margin-bottom: 3rem;
+        }
+
+        /* Kontrol native: pastikan muncul di bawah */
+        .hero video {
+            border-radius: 8px;
+        }
+
+        .btn-special {
+            background: linear-gradient(to right, var(--soft-blue), var(--soft-peach));
+            color: white;
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(121, 161, 191, 0.4);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .btn-special:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(121, 161, 191, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem !important;
+            }
+
+            .lead {
+                font-size: 1rem !important;
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const video = document.getElementById('mainVideo');
+            if (!video) return;
+
+            // Aktifkan suara saat pengguna klik video
+            let soundEnabled = false;
+            video.addEventListener('click', () => {
+                if (!soundEnabled) {
+                    video.muted = false;
+                    soundEnabled = true;
+                    // Opsional: tampilkan notifikasi "Suara aktif"
+                }
+            });
+
+            // Auto-pause saat scroll keluar
+            const videoContainer = video.closest('.position-relative');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting && !video.paused) {
+                        video.pause();
+                    }
+                });
+            }, { threshold: 0.1 });
+            observer.observe(videoContainer);
+        });
     </script>
 
     <!-- 🔹 Fitur LDR (Value Proposition) -->
@@ -459,7 +543,17 @@ $user = $_SESSION['user'] ?? null;
         <div class="container">
             <h3>Siap Kirim Kejutan yang Tak Terlupakan?</h3>
             <p class="text-muted mt-2">Buat akun gratis dan wujudkan hadiah pertamamu hari ini.</p>
-            <a href="?page=register" class="btn btn-special mt-3">Mulai Sekarang</a>
+            <!-- Konsultasi Cepat -->
+            <a href="?page=consultation_form" class="btn"
+                style="background-color: #79A1BF; color: white; border-radius: 12px; padding: 12px 24px; margin-right: 16px;">
+                🎁 Konsultasi Cepat
+            </a>
+
+            <!-- Konsultasi Langsung -->
+            <a href="?page=consultation_direct" class="btn"
+                style="background-color: #E7A494; color: white; border-radius: 12px; padding: 12px 24px;">
+                💬 Konsultasi Langsung
+            </a>
         </div>
     </section>
 
@@ -477,6 +571,8 @@ $user = $_SESSION['user'] ?? null;
             });
         });
     </script>
+    <script
+        type="text/javascript">window.$crisp = []; window.CRISP_WEBSITE_ID = "5714b615-392f-49dc-a04b-2c4f4590d6da"; (function () { d = document; s = d.createElement("script"); s.src = "https://client.crisp.chat/l.js"; s.async = 1; d.getElementsByTagName("head")[0].appendChild(s); })();</script>
 
 </body>
 
