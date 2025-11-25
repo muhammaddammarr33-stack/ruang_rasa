@@ -52,4 +52,5 @@ class RewardController
         header("Location: ?page=user_rewards");
         exit;
     }
+    
 }

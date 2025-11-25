@@ -1,660 +1,412 @@
-<?php
-// HAPUS SEMUA DEBUGGING DI ATAS
-// Pastikan session sudah dimulai
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-?>
 <!DOCTYPE html>
-<style>
-    /* ... CSS Anda tetap sama ... */
-    .chat-container {
-        max-width: 900px;
-        margin: 0 auto;
-        height: calc(100vh - 180px);
-        display: flex;
-        flex-direction: column;
-        background: #f0f2f5;
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    }
+<html lang="id">
 
-    .chat-header {
-        background: linear-gradient(135deg, #79A1BF 0%, #5a8bc4 100%);
-        color: white;
-        padding: 16px 24px;
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chat Konsultasi | Ruang Rasa</title>
 
-    .chat-header .avatar {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        background: #5a8bc4;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 1.2rem;
-    }
+    <!-- Google Fonts: Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
-    .chat-header .info h5 {
-        margin: 0;
-        font-weight: 600;
-        font-size: 1.1rem;
-    }
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    .chat-header .info p {
-        margin: 0;
-        opacity: 0.9;
-        font-size: 0.9rem;
-    }
-
-    .chat-box {
-        flex: 1;
-        padding: 20px;
-        overflow-y: auto;
-        background: #f0f2f5;
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-    }
-
-    .message-container {
-        display: flex;
-        flex-direction: column;
-        max-width: 80%;
-    }
-
-    .message {
-        padding: 12px 16px;
-        border-radius: 18px;
-        position: relative;
-        word-wrap: break-word;
-        line-height: 1.5;
-        font-size: 14px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    }
-
-    .message.received {
-        align-self: flex-start;
-        background: white;
-        border-top-left-radius: 6px;
-        color: #333;
-    }
-
-    .message.sent {
-        align-self: flex-end;
-        background: #79A1BF;
-        border-top-right-radius: 6px;
-        color: white;
-    }
-
-    .message-time {
-        font-size: 11px;
-        opacity: 0.8;
-        margin-top: 4px;
-        text-align: right;
-    }
-
-    .message.received .message-time {
-        text-align: left;
-        color: #777;
-    }
-
-    .typing-indicator {
-        align-self: flex-start;
-        background: white;
-        border: 1px solid #e0e0e0;
-        padding: 12px;
-        border-radius: 18px;
-        font-size: 13px;
-        color: #666;
-        display: none;
-        max-width: fit-content;
-    }
-
-    .product-card {
-        max-width: 300px;
-        background: white;
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-        border: 1px solid #eee;
-    }
-
-    .product-card img {
-        width: 100%;
-        height: 140px;
-        object-fit: cover;
-    }
-
-    .product-card .content {
-        padding: 14px;
-        text-align: center;
-    }
-
-    .product-card .badge {
-        background: #79A1BF;
-        color: white;
-        font-weight: 500;
-        padding: 4px 8px;
-        border-radius: 12px;
-        display: inline-block;
-        margin-bottom: 8px;
-    }
-
-    .product-card .name {
-        font-weight: 600;
-        margin-bottom: 4px;
-        font-size: 15px;
-    }
-
-    .product-card .price {
-        color: #e63946;
-        font-weight: 600;
-        margin-bottom: 12px;
-    }
-
-    .product-card .btn-group {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .chat-input-area {
-        background: white;
-        padding: 16px;
-        border-top: 1px solid #e0e0e0;
-        display: flex;
-        gap: 12px;
-        align-items: center;
-    }
-
-    .chat-input {
-        flex: 1;
-        position: relative;
-    }
-
-    .chat-input input {
-        width: 100%;
-        border: 1px solid #ddd;
-        border-radius: 24px;
-        padding: 12px 20px 12px 50px;
-        font-size: 14px;
-        transition: border-color 0.3s;
-    }
-
-    .chat-input input:focus {
-        border-color: #79A1BF;
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(121, 161, 191, 0.2);
-    }
-
-    .chat-input .emoji-btn {
-        position: absolute;
-        left: 16px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: none;
-        border: none;
-        color: #79A1BF;
-        cursor: pointer;
-        font-size: 1.2rem;
-    }
-
-    .chat-actions {
-        display: flex;
-        gap: 8px;
-    }
-
-    .chat-actions button {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        border: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .chat-actions button.send {
-        background: #79A1BF;
-        color: white;
-    }
-
-    .chat-actions button:hover {
-        transform: scale(1.05);
-    }
-
-    .complete-btn-container {
-        text-align: center;
-        margin-top: 12px;
-        padding: 0 20px;
-    }
-
-    .complete-btn {
-        background: #E7A494;
-        color: white;
-        border: none;
-        border-radius: 24px;
-        padding: 8px 24px;
-        font-weight: 500;
-        transition: all 0.2s;
-        box-shadow: 0 2px 6px rgba(231, 164, 148, 0.4);
-    }
-
-    .complete-btn:hover {
-        background: #e09080;
-        transform: translateY(-1px);
-        box-shadow: 0 3px 8px rgba(231, 164, 148, 0.6);
-    }
-
-    /* Responsif untuk mobile */
-    @media (max-width: 768px) {
-        .chat-container {
-            height: calc(100vh - 140px);
-            margin: 0 10px;
+    <style>
+        :root {
+            --off-white: #F5F5EC;
+            --soft-blue: #79A1BF;
+            --soft-peach: #E7A494;
+            --dark-grey: #343D46;
         }
 
-        .message-container {
-            max-width: 90%;
+        body {
+            background-color: var(--off-white);
+            font-family: 'Poppins', sans-serif;
+            color: var(--dark-grey);
+            padding: 1rem 0;
         }
-    }
-</style>
 
-<div class="chat-container">
-    <div class="chat-header">
-        <div class="avatar">
-            <span>🎁</span>
-        </div>
-        <div class="info">
-            <h5>Konsultasi Kado Personal</h5>
-            <p>#<?= $consultation['id'] ?> • Untuk: <?= htmlspecialchars($consultation['recipient']) ?></p>
-        </div>
-    </div>
-
-    <div class="chat-box" id="chat-box">
-        <div class="typing-indicator" id="typingIndicator">Admin sedang mengetik...</div>
-        <!-- Pesan akan muncul di sini -->
-    </div>
-
-    <form id="chatForm" method="POST" class="chat-input-area">
-        <input type="hidden" name="consultation_id" value="<?= $consultation['id'] ?>">
-        <div class="chat-input">
-            <button type="button" class="emoji-btn" id="emojiBtn">😊</button>
-            <input type="text" name="message" placeholder="Tulis pesan..." required>
-        </div>
-        <div class="chat-actions">
-            <button type="submit" class="send">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path d="M22 2L11 13" stroke="white" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round" />
-                    <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="white" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round" />
-                </svg>
-            </button>
-        </div>
-    </form>
-
-    <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'admin'): ?>
-        <div class="mt-2" style="padding: 0 20px;">
-            <select id="adminProductPicker" class="form-select" style="border-radius: 12px; padding: 8px 16px;">
-                <option value="">— Rekomendasikan Produk —</option>
-                <?php
-                // ✅ PERBAIKAN: Ambil produk dengan gambar dari product_images
-                $db = DB::getInstance();
-                $products = $db->query("
-                    SELECT p.id, p.name, p.price, pi.image_path
-                    FROM products p
-                    LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.is_main = 1
-                    ORDER BY p.name
-                ")->fetchAll();
-                foreach ($products as $p):
-                    $imagePath = $p['image_path'] ?? '';
-                    ?>
-                    <option value="<?= $p['id'] ?>" data-image="<?= htmlspecialchars($imagePath) ?>">
-                        <?= htmlspecialchars($p['name']) ?> - Rp <?= number_format($p['price'], 0, ',', '.') ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-    <?php endif; ?>
-</div>
-
-<?php if (($_SESSION['user']['role'] ?? '') !== 'admin'): ?>
-    <div class="complete-btn-container">
-        <button class="complete-btn" id="completeBtn">
-            ✔ Selesai Konsultasi
-        </button>
-    </div>
-<?php endif; ?>
-
-<!-- Emoji Picker Modal -->
-<div class="modal fade" id="emojiModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Pilih Emoji</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body d-flex flex-wrap gap-3 justify-content-center p-4" style="font-size: 1.8rem;">
-                <?php
-                $emojis = ['😊', '👍', '❤️', '🎉', '🤗', '🤩', '🎁', '🙏', '💯', '✨'];
-                foreach ($emojis as $emoji):
-                    ?>
-                    <button class="btn emoji-item" data-emoji="<?= $emoji ?>"><?= $emoji ?></button>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    // Konfigurasi global
-    const consultationId = <?= (int) $consultation['id'] ?>;
-    const currentUserId = <?= (int) $_SESSION['user']['id'] ?>;
-    const isAdmin = <?= (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'admin') ? 'true' : 'false' ?>;
-
-    // Inisialisasi Pusher
-    const pusher = new Pusher("5bff370a5bd607d4280f", {
-        cluster: "ap1",
-        encrypted: true
-    });
-    const channel = pusher.subscribe("consultation_" + consultationId);
-
-    // Event listeners Pusher
-    channel.bind('new_message', function (data) {
-        addMessageToChat(data);
-        hideTypingIndicator();
-    });
-
-    channel.bind('user_typing', function (data) {
-        if (data.sender_id != currentUserId && !isAdmin) {
-            showTypingIndicator();
-            setTimeout(hideTypingIndicator, 3000);
+        #chat-box {
+            height: 400px;
+            overflow-y: auto;
+            background: #fafafa;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
         }
-    });
 
-    // Load history pesan
-    fetchMessages();
+        .message {
+            margin-bottom: 12px;
+            padding: 10px 14px;
+            border-radius: 16px;
+            max-width: 70%;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            position: relative;
+        }
 
-    // Fungsi utility
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
+        .sent {
+            background: var(--soft-blue);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
 
-    function showTypingIndicator() {
-        document.getElementById('typingIndicator').style.display = 'block';
-    }
+        .received {
+            background: var(--soft-peach);
+            color: var(--dark-grey);
+            border-bottom-left-radius: 4px;
+        }
 
-    function hideTypingIndicator() {
-        document.getElementById('typingIndicator').style.display = 'none';
-    }
+        .message strong {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
 
-    function showNotification(message, type = "success") {
-        const toast = document.createElement("div");
-        toast.className = `toast align-items-center text-white bg-${type === "success" ? "success" : "danger"} border-0`;
-        toast.setAttribute("role", "alert");
-        toast.setAttribute("aria-live", "assertive");
-        toast.setAttribute("aria-atomic", "true");
-        toast.style = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            max-width: 300px;
-        `;
+        .message time {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
 
-        toast.innerHTML = `
-            <div class="d-flex w-100">
-                <div class="toast-body">${escapeHtml(message)}</div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        `;
+        /* Produk dalam chat */
+        .product-card {
+            max-width: 320px;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
 
-        document.body.appendChild(toast);
-        const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
-        bsToast.show();
+        .product-card img {
+            height: 140px;
+            object-fit: cover;
+            width: 100%;
+        }
 
-        toast.addEventListener('hidden.bs.toast', () => {
-            toast.remove();
-        });
-    }
+        .product-card .card-body {
+            padding: 12px !important;
+        }
 
-    // Fetch pesan lama - ✅ PERBAIKAN UTAMA
-    async function fetchMessages() {
-        try {
-            const response = await fetch(`?page=chat_fetch&id=${consultationId}`);
+        .product-card .btn {
+            font-size: 0.85rem;
+            padding: 6px 12px;
+            border-radius: 10px;
+        }
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+        .btn-send {
+            background-color: var(--soft-blue);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 0.65rem 1.2rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        .btn-send:hover:not(:disabled) {
+            background-color: #658db2;
+            transform: translateY(-1px);
+        }
+
+        .btn-complete {
+            background-color: var(--soft-peach);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 6px 16px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: background-color 0.2s;
+        }
+
+        .btn-complete:hover {
+            background-color: #d89484;
+        }
+
+        /* Draft indicator */
+        #draftIndicator {
+            font-size: 0.85rem;
+            color: #6c757d;
+            display: none;
+            margin-top: 6px;
+        }
+
+        /* Form group responsif */
+        .input-group {
+            max-width: 100%;
+        }
+
+        .input-group .form-control {
+            border-radius: 12px 0 0 12px;
+            border: 1px solid #ddd;
+            padding: 0.7rem;
+        }
+
+        .input-group .btn-send {
+            border-radius: 0 12px 12px 0;
+            height: auto;
+        }
+
+        @media (max-width: 768px) {
+            #chat-box {
+                height: 350px;
+                padding: 12px;
             }
 
-            const messages = await response.json();
-            const chatBox = document.getElementById("chat-box");
+            .message {
+                max-width: 80%;
+            }
 
-            // Kosongkan konten lama kecuali typing indicator
-            chatBox.innerHTML = '<div class="typing-indicator" id="typingIndicator">Admin sedang mengetik...</div>';
-
-            // Render semua pesan
-            messages.forEach(addMessageToChat);
-
-            // Scroll ke bawah
-            chatBox.scrollTop = chatBox.scrollHeight;
-        } catch (error) {
-            console.error('Error fetching messages:', error);
-            showNotification("Gagal memuat riwayat chat. Coba refresh halaman.", "danger");
+            .product-card {
+                max-width: 100%;
+            }
         }
-    }
+    </style>
+</head>
 
-    // Tambah pesan ke chat
-    function addMessageToChat(data) {
-        const isMe = data.sender_id == currentUserId;
-        const msgContainer = document.createElement('div');
-        msgContainer.className = `message-container d-flex flex-column ${isMe ? 'align-self-end' : 'align-self-start'}`;
+<body>
+    <div class="container py-4">
+        <h4 class="mb-3">💬 Konsultasi #<?= htmlspecialchars($consultation['id'], ENT_QUOTES, 'UTF-8') ?></h4>
 
-        let contentHTML = '';
+        <div id="chat-box" aria-live="polite" aria-relevant="additions"></div>
 
-        // Handle pesan produk
-        if (data.message_type === 'product' && data.product_id) {
-            const productName = escapeHtml(data.display_message || data.message);
-            const imageUrl = data.product_image || 'https://via.placeholder.com/300x150?text=No+Image';
-            const price = data.product_price ? `Rp ${Number(data.product_price).toLocaleString('id-ID')}` : 'Harga tidak tersedia';
+        <form id="chatForm" method="POST" novalidate>
+            <input type="hidden" name="consultation_id" value="<?= (int) $consultation['id'] ?>">
+            <div class="input-group">
+                <input type="text" name="message" class="form-control" placeholder="Ketik pesan..." required
+                    aria-label="Ketik pesan konsultasi">
+                <button class="btn-send" type="submit" aria-label="Kirim pesan">Kirim</button>
+            </div>
+            <div id="draftIndicator" role="status">📝 Draft tersimpan</div>
+        </form>
 
-            contentHTML = `
-        <div class="product-card">
-            <img src="${imageUrl}" alt="${productName}" onerror="this.src='https://via.placeholder.com/300x150?text=Product+Image'">
-            <div class="content">
-                <div class="badge">🎁 Rekomendasi Kado</div>
-                <div class="name">${productName}</div>
-                <div class="price">${price}</div>
-                <div class="btn-group">
-                    <button class="btn btn-sm add-to-cart-btn" 
-                            data-product-id="${escapeHtml(data.product_id)}"
-                            style="background-color: #79A1BF; color: white; border-radius: 8px;">
-                        ➕ Tambah ke Keranjang
-                    </button>
-                    <a href="?page=product_detail&id=${escapeHtml(data.product_id)}" 
-                       class="btn btn-sm btn-outline-primary" 
-                       style="border-radius: 8px;">
-                        Lihat Detail
+        <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'admin'): ?>
+            <div class="mt-3">
+                <select id="adminProductPicker" class="form-select" style="max-width: 300px;"
+                    aria-label="Pilih produk untuk rekomendasikan">
+                    <option value="">Pilih produk untuk rekomendasikan</option>
+                    <?php
+                    $db = DB::getInstance();
+                    $products = $db->query("SELECT id, name FROM products ORDER BY name")->fetchAll();
+                    foreach ($products as $p): ?>
+                        <option value="<?= (int) $p['id'] ?>"><?= htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8') ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        <?php endif; ?>
+
+        <?php if (($_SESSION['user']['role'] ?? '') !== 'admin'):
+            $hasAdminMessage = false;
+            $checkAdmin = $db->prepare("
+        SELECT 1 FROM consultation_messages 
+        WHERE consultation_id = ? AND sender_id != ?
+        LIMIT 1
+      ");
+            $checkAdmin->execute([$consultation['id'], $_SESSION['user']['id']]);
+            $hasAdminMessage = (bool) $checkAdmin->fetch();
+            ?>
+            <?php if ($hasAdminMessage): ?>
+                <div class="text-center mt-3">
+                    <a href="?page=complete_consultation&id=<?= (int) $consultation['id'] ?>" class="btn-complete"
+                        onclick="return confirm('Apakah Anda yakin ingin menyelesaikan konsultasi ini?')"
+                        aria-label="Selesai konsultasi">
+                        ✔ Selesai Konsultasi
                     </a>
                 </div>
-            </div>
-        </div>
-        <div class="message-time" style="text-align: ${isMe ? 'right' : 'left'}; margin-top: 4px; font-size: 11px;">
-            ${isMe ? 'Anda' : escapeHtml(data.name)} • ${escapeHtml(data.time)}
-        </div>
-        `;
-        } else {
-            // Pesan teks biasa
-            const bgClass = isMe ? 'sent' : 'received';
-            const messageText = data.display_message || data.message || '';
-            contentHTML = `
-        <div class="message ${bgClass}">
-            ${escapeHtml(messageText).replace(/\n/g, '<br>')}
-            <div class="message-time">${escapeHtml(data.time)}</div>
-        </div>
-        `;
-        }
+            <?php else: ?>
+                <div class="text-center mt-3 text-muted" style="font-size: 0.9rem;">
+                    Tunggu rekomendasi dari tim kami sebelum menyelesaikan konsultasi.
+                </div>
+            <?php endif; ?>
+        <?php endif; ?>
+    </div>
 
-        msgContainer.innerHTML = contentHTML;
-        document.getElementById("chat-box").appendChild(msgContainer);
-    }
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <script>
+        const consultationId = <?= (int) $consultation['id'] ?>;
+        const currentUserId = <?= (int) $_SESSION['user']['id'] ?>;
+        const isAdmin = <?= (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'admin') ? 'true' : 'false' ?>;
+        const DRAFT_KEY = `chat_draft_${consultationId}`;
 
-    // Event delegation
-    document.getElementById("chat-box").addEventListener("click", function (e) {
-        if (e.target.classList.contains("add-to-cart-btn")) {
-            const productId = e.target.getAttribute("data-product-id");
-            addToCart(productId, e.target);
-        }
-    });
-
-    // Tambah ke keranjang
-    async function addToCart(productId, button) {
-        const originalText = button.innerHTML;
-        button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
-        button.disabled = true;
-
-        try {
-            const response = await fetch("?page=add_to_cart_ajax", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: productId })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                throw new Error(data.error || "Gagal menambahkan produk");
+        document.addEventListener('DOMContentLoaded', () => {
+            const messageInput = document.querySelector('input[name="message"]');
+            if (messageInput) {
+                const savedDraft = localStorage.getItem(DRAFT_KEY);
+                if (savedDraft) {
+                    messageInput.value = savedDraft;
+                    document.getElementById('draftIndicator').style.display = 'block';
+                }
             }
+        });
 
-            showNotification(`✅ ${data.message}`);
-        } catch (error) {
-            console.error('Error:', error);
-            showNotification(`❌ ${error.message}`, "danger");
-        } finally {
-            button.innerHTML = originalText;
-            button.disabled = false;
-        }
-    }
+        let draftSaveTimer;
+        document.querySelector('input[name="message"]')?.addEventListener('input', function () {
+            clearTimeout(draftSaveTimer);
+            const message = this.value.trim();
+            draftSaveTimer = setTimeout(() => {
+                const indicator = document.getElementById('draftIndicator');
+                if (message) {
+                    localStorage.setItem(DRAFT_KEY, message);
+                    indicator.style.display = 'block';
+                } else {
+                    localStorage.removeItem(DRAFT_KEY);
+                    indicator.style.display = 'none';
+                }
+            }, 1000);
+        });
 
-    // Kirim pesan - ✅ HINDARI DUPLIKAT
-    document.getElementById("chatForm").addEventListener("submit", async function (e) {
-        e.preventDefault();
-
-        const messageInput = this.message;
-        const message = messageInput.value.trim();
-        if (!message) return;
-
-        // Simpan nilai asli
-        const originalMessage = message;
-
-        try {
-            const formData = new FormData();
-            formData.append('consultation_id', consultationId);
-            formData.append('message', message);
-
-            // Nonaktifkan input sementara
-            messageInput.disabled = true;
-            const submitBtn = this.querySelector('.send');
-            const originalBtnHtml = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
-            submitBtn.disabled = true;
-
-            const response = await fetch("?page=chat_send", {
-                method: "POST",
+        document.getElementById('chatForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch('?page=chat_send', {
+                method: 'POST',
                 body: formData
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `Gagal mengirim pesan`);
-            }
-
-            // Reset form
-            messageInput.value = "";
-        } catch (error) {
-            console.error('Error sending message:', error);
-            showNotification(`❌ ${error.message}`, "danger");
-            messageInput.value = originalMessage; // Kembalikan pesan
-        } finally {
-            // Aktifkan kembali input
-            messageInput.disabled = false;
-            const submitBtn = this.querySelector('.send');
-            submitBtn.innerHTML = originalBtnHtml;
-            submitBtn.disabled = false;
-            messageInput.focus();
-        }
-    });
-
-    // Emoji picker
-    document.getElementById('emojiBtn').addEventListener('click', function () {
-        const modal = new bootstrap.Modal(document.getElementById('emojiModal'));
-        modal.show();
-    });
-
-    document.querySelectorAll('.emoji-item').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const emoji = this.getAttribute('data-emoji');
-            const input = document.querySelector('input[name="message"]');
-            input.value += emoji;
-            input.focus();
-            bootstrap.Modal.getInstance(document.getElementById('emojiModal')).hide();
-        });
-    });
-
-    // Admin product picker - pastikan kirim sebagai produk
-    document.getElementById('adminProductPicker').addEventListener('change', async function () {
-        if (!this.value) return;
-
-        const productId = this.value;
-        const originalText = this.options[this.selectedIndex].text;
-
-        try {
-            // Nonaktifkan sementara
-            this.disabled = true;
-            this.options[this.selectedIndex].text = ' Mengirim...';
-
-            // Kirim sebagai format produk
-            const response = await fetch("?page=chat_send", {
-                method: "POST",
-                body: new URLSearchParams({
-                    consultation_id: consultationId,
-                    message: `!produk:${productId}`
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        alert('Gagal mengirim pesan. Coba lagi.');
+                    } else {
+                        localStorage.removeItem(DRAFT_KEY);
+                        this.message.value = '';
+                        document.getElementById('draftIndicator').style.display = 'none';
+                    }
                 })
+                .catch(() => {
+                    alert('Kesalahan koneksi. Coba lagi.');
+                });
+        });
+
+        const pusher = new Pusher('5bff370a5bd607d4280f', {
+            cluster: 'ap1',
+            encrypted: true
+        });
+        const channel = pusher.subscribe('consultation_' + consultationId);
+
+        channel.bind('new_message', function (data) {
+            addMessage(
+                data.name,
+                data.message,
+                data.time,
+                data.sender_id == currentUserId,
+                data.message_type || 'text',
+                data.product_id || null,
+                data.product_image || null,
+                data.product_price || null
+            );
+        });
+
+        fetch('?page=chat_fetch&id=' + consultationId)
+            .then(res => res.json())
+            .then(messages => {
+                messages.forEach(msg => {
+                    const messageType = msg.message_type || 'text';
+                    addMessage(
+                        msg.name,
+                        msg.message,
+                        msg.created_at.substring(11, 16),
+                        msg.sender_id == currentUserId,
+                        messageType,
+                        messageType === 'product' ? msg.product_id : null,
+                        messageType === 'product' ? msg.product_image : null,
+                        messageType === 'product' ? msg.product_price : null
+                    );
+                });
+                scrollToBottom();
             });
 
-            if (!response.ok) throw new Error('Gagal mengirim');
+        function addMessage(name, msg, time, isMe, messageType = 'text', productId = null, productImage = null, productPrice = null) {
+            const chatBox = document.getElementById('chat-box');
 
-            showNotification(`✅ ${originalText} berhasil dikirim!`);
-        } catch (error) {
-            console.error('Error:', error);
-            showNotification(`❌ ${error.message}`, "danger");
-        } finally {
-            this.selectedIndex = 0;
-            this.options[this.selectedIndex].text = originalText;
-            this.disabled = false;
+            if (messageType === 'product' && productId) {
+                const imageUrl = productImage || 'https://via.placeholder.com/300x150?text=No+Image';
+                const priceFormatted = productPrice ? 'Rp ' + parseFloat(productPrice).toLocaleString('id-ID') : '';
+
+                const card = document.createElement('div');
+                card.className = 'product-card mb-3';
+                card.innerHTML = `
+          <img src="${imageUrl}" class="card-img-top" 
+               onerror="this.src='https://via.placeholder.com/300x150?text=Product+Image'">
+          <div class="card-body p-2">
+            <h6 class="card-title mb-1">${msg}</h6>
+            <p class="card-text text-danger mb-2">${priceFormatted}</p>
+            <div class="d-grid gap-2">
+              <button class="btn btn-sm btn-primary add-to-cart-btn" 
+                      data-product-id="${productId}" style="font-size: 0.85rem;">
+                ➕ Tambah ke Keranjang
+              </button>
+              <a href="?page=product_detail&id=${productId}" class="btn btn-sm btn-outline-secondary" style="font-size: 0.85rem;">
+                Lihat Detail
+              </a>
+            </div>
+            <small class="text-muted mt-2 d-block">
+              ${isMe ? 'Anda' : name} • ${time}
+            </small>
+          </div>
+        `;
+                chatBox.appendChild(card);
+            } else {
+                const div = document.createElement('div');
+                div.className = 'message ' + (isMe ? 'sent' : 'received');
+                div.innerHTML = `
+          <strong>${isMe ? 'Anda' : name}</strong>
+          <span>${msg}</span>
+          <time>${time}</time>
+        `;
+                chatBox.appendChild(div);
+            }
+
+            scrollToBottom();
         }
-    });
 
-    // Tombol selesai
-    <?php if (($_SESSION['user']['role'] ?? '') !== 'admin'): ?>
-        document.getElementById('completeBtn').addEventListener('click', function () {
-            if (confirm('Apakah Anda yakin ingin menyelesaikan konsultasi ini? Anda bisa lanjut ke keranjang untuk checkout.')) {
-                window.location.href = `?page=complete_consultation&id=<?= $consultation['id'] ?>`;
+        function scrollToBottom() {
+            const box = document.getElementById('chat-box');
+            box.scrollTop = box.scrollHeight;
+        }
+
+        document.getElementById('chat-box').addEventListener('click', function (e) {
+            if (e.target.classList.contains('add-to-cart-btn')) {
+                const productId = e.target.getAttribute('data-product-id');
+                fetch('?page=add_to_cart_ajax', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: productId })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        alert(data.success ? '✅ ' + data.message : '❌ ' + (data.error || 'Gagal menambahkan'));
+                    })
+                    .catch(() => {
+                        alert('❌ Gagal terhubung ke server');
+                    });
             }
         });
-    <?php endif; ?>
-</script>
+
+        <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'admin'): ?>
+            document.getElementById('adminProductPicker').addEventListener('change', function () {
+                if (this.value) {
+                    document.querySelector('input[name="message"]').value = `!produk:${this.value}`;
+                    document.getElementById('chatForm').dispatchEvent(new Event('submit'));
+                    this.value = '';
+                }
+            });
+        <?php endif; ?>
+
+        channel.bind('new_message', function (data) {
+            if (data.sender_id != currentUserId) {
+                const badge = document.querySelector('.consultation-badge');
+                if (badge) {
+                    let count = parseInt(badge.textContent) || 0;
+                    badge.textContent = count + 1;
+                    badge.style.display = 'inline-block';
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

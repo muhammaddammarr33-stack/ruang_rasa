@@ -45,25 +45,27 @@ class AdminDashboardController
         }
 
         $metrics = $this->gatherMetrics($start, $end);
-        $trend = $this->orderModel->dailyTrend($start, $end);
+        $trend = $this->orderModel->dailyTrend($start, $end); // returns ['Y-m-d' => ['revenue'=>..., 'orders'=>...]]
         $topProducts = $this->orderModel->topProductsBetween($start, $end, 10);
         $topCategories = $this->orderModel->topCategoriesBetween($start, $end, 6);
         $recentOrders = $this->orderModel->recentOrders(10);
 
-        // prepare series arrays
-        $labels = array_keys($trend);
-        $revenueSeries = array_map(function ($v) {
-            return $v['revenue'];
-        }, $trend);
-        $ordersSeries = array_map(function ($v) {
-            return $v['orders'];
-        }, $trend);
+        // 🔥 Ekstrak ke dalam array terurut
+        $labels = [];
+        $revenueSeries = [];
+        $ordersSeries = [];
+
+        foreach ($trend as $date => $values) {
+            $labels[] = $date;
+            $revenueSeries[] = (float) ($values['revenue'] ?? 0);
+            $ordersSeries[] = (int) ($values['orders'] ?? 0);
+        }
 
         echo json_encode([
             'metrics' => $metrics,
             'labels' => $labels,
-            'revenue' => $revenueSeries,
-            'orders' => $ordersSeries,
+            'revenue' => $revenueSeries,     // ✅ array: [208000]
+            'orders' => $ordersSeries,       // ✅ array: [1]
             'topProducts' => $topProducts,
             'topCategories' => $topCategories,
             'recentOrders' => $recentOrders
@@ -86,9 +88,7 @@ class AdminDashboardController
             ];
         }
         // new users
-        $stmt = $this->orderModel->db->prepare("SELECT id, name, created_at FROM users ORDER BY created_at DESC LIMIT 5");
-        $stmt->execute();
-        $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $users = $this->orderModel->getRecentUsers(5);
         foreach ($users as $u) {
             $feed[] = [
                 'type' => 'user',

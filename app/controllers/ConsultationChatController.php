@@ -21,7 +21,6 @@ class ConsultationChatController
             exit;
         }
 
-        // ✅ IZINKAN SEMUA ROLE YANG ADA
         $allowedRoles = ['admin', 'user', 'customer'];
         $currentRole = strtolower($_SESSION['user']['role'] ?? '');
 
@@ -44,31 +43,74 @@ class ConsultationChatController
         if (!$consultationId || $msg === '')
             return;
 
-        // Simpan SEMUA pesan sebagai text
+        // 🔍 Deteksi apakah ini perintah produk
+        $message_type = 'text';
+        $product_id = null;
+
+        if (preg_match('/^!produk:(\d+)$/', $msg, $matches)) {
+            $product_id = (int) $matches[1];
+            // Validasi produk
+            $prodCheck = $this->db->prepare("
+                SELECT p.id 
+                FROM products p 
+                WHERE p.id = ? AND p.stock > 0
+            ");
+            $prodCheck->execute([$product_id]);
+            if ($prodCheck->fetch()) {
+                $message_type = 'product';
+                // Simpan NAMA PRODUK, bukan "!produk:123"
+                $nameStmt = $this->db->prepare("SELECT name FROM products WHERE id = ?");
+                $nameStmt->execute([$product_id]);
+                $msg = $nameStmt->fetchColumn() ?: "Produk ID $product_id";
+            }
+        }
+
+        // ✅ Simpan dengan tipe yang benar
         $stmt = $this->db->prepare("
-        INSERT INTO consultation_messages 
-        (consultation_id, sender_id, message, message_type, product_id, created_at)
-        VALUES (?, ?, ?, 'text', NULL, NOW())
-    ");
-        $stmt->execute([$consultationId, $senderId, $msg]);
+            INSERT INTO consultation_messages 
+            (consultation_id, sender_id, message, message_type, product_id, created_at)
+            VALUES (?, ?, ?, ?, ?, NOW())
+        ");
+        $stmt->execute([$consultationId, $senderId, $msg, $message_type, $product_id]);
 
         // Ambil nama pengirim
         $userStmt = $this->db->prepare("SELECT name FROM users WHERE id = ?");
         $userStmt->execute([$senderId]);
         $name = $userStmt->fetchColumn() ?: 'User';
 
+        // 🔥 Kirim data lengkap ke Pusher
+        $pusherData = [
+            'sender_id' => $senderId,
+            'message' => $msg,
+            'message_type' => $message_type,
+            'name' => $name,
+            'time' => date('H:i')
+        ];
+
+        // Jika produk, tambahkan data gambar & harga
+        if ($message_type === 'product') {
+            $prodData = $this->db->prepare("
+                SELECT p.price, pi.image_path
+                FROM products p
+                LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.is_main = 1
+                WHERE p.id = ?
+            ");
+            $prodData->execute([$product_id]);
+            $prod = $prodData->fetch();
+
+            if ($prod) {
+                $pusherData['product_id'] = $product_id;
+                $pusherData['product_price'] = $prod['price'];
+                $pusherData['product_image'] = $prod['image_path'];
+            }
+        }
+
         // Kirim via Pusher
         $pusher = new Pusher("5bff370a5bd607d4280f", "f75608a929bee783bd01", "2079295", [
             'cluster' => 'ap1',
             'useTLS' => true
         ]);
-        $pusher->trigger("consultation_$consultationId", 'new_message', [
-            'sender_id' => $senderId,
-            'message' => $msg,
-            'message_type' => 'text',
-            'name' => $name,
-            'time' => date('H:i')
-        ]);
+        $pusher->trigger("consultation_$consultationId", 'new_message', $pusherData);
     }
 
     public function fetchMessages()
@@ -80,53 +122,25 @@ class ConsultationChatController
         }
 
         try {
-            // ✅ Query yang benar untuk ambil data produk
+            // ✅ Ambil semua data termasuk produk
             $stmt = $this->db->prepare("
-            SELECT 
-                m.*,
-                u.name,
-                CASE 
-                    WHEN m.message_type = 'product' THEN p.name
-                    ELSE m.message
-                END as display_message,
-                pi.image_path as product_image,
-                p.price as product_price
-            FROM consultation_messages m
-            JOIN users u ON u.id = m.sender_id
-            LEFT JOIN products p ON p.id = m.product_id
-            LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.is_main = 1
-            WHERE m.consultation_id = ?
-            ORDER BY m.created_at ASC
-        ");
+                SELECT 
+                    m.*,
+                    u.name,
+                    pi.image_path as product_image,
+                    p.price as product_price
+                FROM consultation_messages m
+                JOIN users u ON u.id = m.sender_id
+                LEFT JOIN products p ON p.id = m.product_id
+                LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.is_main = 1
+                WHERE m.consultation_id = ?
+                ORDER BY m.created_at ASC
+            ");
             $stmt->execute([$consultationId]);
             $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             foreach ($messages as &$msg) {
                 $msg['time'] = date('H:i', strtotime($msg['created_at']));
-
-                // Handle pesan teks yang berisi !produk:
-                if ($msg['message_type'] === 'text' && strpos($msg['message'], '!produk:') === 0) {
-                    $productId = (int) str_replace('!produk:', '', $msg['message']);
-                    if ($productId > 0) {
-                        // Ambil data produk
-                        $prodStmt = $this->db->prepare("
-                        SELECT p.name, p.price, pi.image_path
-                        FROM products p
-                        LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.is_main = 1
-                        WHERE p.id = ?
-                    ");
-                        $prodStmt->execute([$productId]);
-                        $product = $prodStmt->fetch();
-
-                        if ($product) {
-                            $msg['message_type'] = 'product';
-                            $msg['product_id'] = $productId;
-                            $msg['display_message'] = $product['name'];
-                            $msg['product_image'] = $product['image_path'] ?? '';
-                            $msg['product_price'] = $product['price'];
-                        }
-                    }
-                }
             }
 
             header('Content-Type: application/json; charset=utf-8');

@@ -1,16 +1,14 @@
 <?php
-// app/models/Memberships.php
 require_once __DIR__ . '/DB.php';
 
 class Memberships
 {
     private $db;
-
     private $tiers = [
         'basic' => 0,
-        'silver' => 2000,     // contoh: total poin ≥ 2000
-        'gold' => 10000,      // contoh: total poin ≥ 10000
-        'platinum' => 30000   // contoh: total poin ≥ 30000
+        'silver' => 2000,
+        'gold' => 10000,
+        'platinum' => 30000
     ];
 
     public function __construct()
@@ -18,85 +16,81 @@ class Memberships
         $this->db = DB::getInstance();
     }
 
-    /* ---------------------------------------------------
-     * CREATE MEMBERSHIP RECORD IF NOT EXISTS
-     * --------------------------------------------------- */
     public function ensureMembership($userId)
     {
+        if (!is_numeric($userId) || $userId <= 0)
+            return false;
+
         $stmt = $this->db->prepare("SELECT id FROM memberships WHERE user_id = ?");
         $stmt->execute([$userId]);
-
         if (!$stmt->fetch()) {
             $stmt2 = $this->db->prepare("
                 INSERT INTO memberships (user_id, tier, points, updated_at)
                 VALUES (?, 'basic', 0, NOW())
             ");
-            $stmt2->execute([$userId]);
+            return $stmt2->execute([$userId]);
         }
+        return true;
     }
 
-    /* ---------------------------------------------------
-     * GET USER MEMBERSHIP
-     * --------------------------------------------------- */
     public function get($userId)
     {
-        $stmt = $this->db->prepare("
-            SELECT * FROM memberships WHERE user_id = ?
-        ");
+        if (!is_numeric($userId) || $userId <= 0)
+            return false;
+
+        $stmt = $this->db->prepare("SELECT * FROM memberships WHERE user_id = ?");
         $stmt->execute([$userId]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    /* ---------------------------------------------------
-     * ADD POINTS (AFTER PAYMENT SUCCESS)
-     * --------------------------------------------------- */
     public function addPoints($userId, $points)
     {
-        $points = (int) $points;
-        $this->ensureMembership($userId);
+        $points = max(0, (int) $points);
+        if (!$this->ensureMembership($userId))
+            return false;
 
         $stmt = $this->db->prepare("
             UPDATE memberships
             SET points = points + ?, updated_at = NOW()
             WHERE user_id = ?
         ");
-        $stmt->execute([$points, $userId]);
-
-        $this->recalculateTier($userId);
+        $result = $stmt->execute([$points, $userId]);
+        if ($result)
+            $this->recalculateTier($userId);
+        return $result;
     }
 
-    /* ---------------------------------------------------
-     * DEDUCT POINTS (REDEEM OR DISCOUNT)
-     * --------------------------------------------------- */
     public function deductPoints($userId, $points)
     {
-        $points = (int) $points;
-        $this->ensureMembership($userId);
+        $points = max(0, (int) $points);
+        if (!$this->ensureMembership($userId))
+            return false;
 
         $stmt = $this->db->prepare("
             UPDATE memberships
             SET points = GREATEST(points - ?, 0), updated_at = NOW()
             WHERE user_id = ?
         ");
-        $stmt->execute([$points, $userId]);
-
-        $this->recalculateTier($userId);
+        $result = $stmt->execute([$points, $userId]);
+        if ($result)
+            $this->recalculateTier($userId);
+        return $result;
     }
 
-    /* ---------------------------------------------------
-     * AUTO TIER CALCULATION (BASED ON POINTS)
-     * --------------------------------------------------- */
     public function recalculateTier($userId)
     {
         $data = $this->get($userId);
         if (!$data)
             return;
 
-        $points = $data['points'];
+        $points = (int) $data['points'];
         $newTier = 'basic';
 
-        // looping tier dari terbesar
-        foreach (array_reverse($this->tiers, true) as $tier => $minPoints) {
+        // Urutkan tier dari tertinggi
+        $tiersSorted = $this->tiers;
+        arsort($tiersSorted);
+
+        foreach ($tiersSorted as $tier => $minPoints) {
             if ($points >= $minPoints) {
                 $newTier = $tier;
                 break;
@@ -113,37 +107,97 @@ class Memberships
         }
     }
 
-    /* ---------------------------------------------------
-     * REDEEM REWARD (POINT → REWARD)
-     * --------------------------------------------------- */
     public function redeemReward($userId, $rewardId)
     {
+        // Validasi dasar
+        if (
+            !is_numeric($userId) || $userId <= 0 ||
+            !is_numeric($rewardId) || $rewardId <= 0
+        ) {
+            return ['error' => 'ID tidak valid'];
+        }
+
         $this->ensureMembership($userId);
 
-        // get reward
-        $stmt = $this->db->prepare("SELECT * FROM rewards WHERE id = ?");
-        $stmt->execute([$rewardId]);
-        $reward = $stmt->fetch(PDO::FETCH_ASSOC);
+        // Mulai transaksi
+        $this->db->beginTransaction();
+        try {
+            // Ambil reward dengan lock
+            $stmt = $this->db->prepare("
+                SELECT * FROM rewards 
+                WHERE id = ? AND deleted_at IS NULL
+                FOR UPDATE
+            ");
+            $stmt->execute([$rewardId]);
+            $reward = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$reward)
-            return ['error' => 'Reward tidak ditemukan'];
+            if (!$reward) {
+                throw new Exception('Reward tidak tersedia');
+            }
 
-        // get user points
-        $membership = $this->get($userId);
+            // Cek cooldown (5 menit)
+            $lastRedeem = $this->db->prepare("
+                SELECT redeemed_at FROM reward_redemptions 
+                WHERE user_id = ? 
+                ORDER BY redeemed_at DESC 
+                LIMIT 1
+            ");
+            $lastRedeem->execute([$userId]);
+            $last = $lastRedeem->fetch();
 
-        if ($membership['points'] < $reward['points_required'])
-            return ['error' => 'Poin tidak cukup'];
+            if ($last && strtotime($last['redeemed_at']) > time() - 300) {
+                throw new Exception("Silakan tunggu 5 menit sebelum redeem lagi");
+            }
 
-        // deduct points
-        $this->deductPoints($userId, $reward['points_required']);
+            // Ambil data membership dengan lock
+            $memStmt = $this->db->prepare("
+                SELECT points FROM memberships 
+                WHERE user_id = ? 
+                FOR UPDATE
+            ");
+            $memStmt->execute([$userId]);
+            $membership = $memStmt->fetch(PDO::FETCH_ASSOC);
 
-        // create redemption record
-        $stmt2 = $this->db->prepare("
-            INSERT INTO reward_redemptions (user_id, reward_id, redeemed_at)
-            VALUES (?,?,NOW())
+            if (!$membership || $membership['points'] < $reward['points_required']) {
+                throw new Exception('Poin tidak cukup');
+            }
+
+            // Deduct points
+            $this->deductPoints($userId, $reward['points_required']);
+
+            // Buat record redeem
+            $stmt2 = $this->db->prepare("
+                INSERT INTO reward_redemptions (user_id, reward_id, redeemed_at)
+                VALUES (?,?,NOW())
+            ");
+            $stmt2->execute([$userId, $rewardId]);
+
+            // Kirim notifikasi ke admin
+            $this->sendAdminNotification($userId, $reward['name']);
+
+            $this->db->commit();
+            return ['success' => true];
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    private function sendAdminNotification($userId, $rewardName)
+    {
+        $adminStmt = $this->db->prepare("
+            SELECT id FROM users WHERE role = 'admin' LIMIT 1
         ");
-        $stmt2->execute([$userId, $rewardId]);
+        $adminStmt->execute();
+        $admin = $adminStmt->fetch();
 
-        return ['success' => true];
+        if ($admin) {
+            $notifStmt = $this->db->prepare("
+                INSERT INTO notifications (user_id, message, is_read, created_at)
+                VALUES (?, ?, 0, NOW())
+            ");
+            $message = "User ID $userId baru saja redeem: $rewardName";
+            $notifStmt->execute([$admin['id'], $message]);
+        }
     }
 }

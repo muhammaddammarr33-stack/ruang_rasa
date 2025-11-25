@@ -26,6 +26,14 @@
             background-color: var(--off-white);
             font-family: 'Poppins', sans-serif;
             color: var(--dark-grey);
+            padding: 1rem 0;
+        }
+
+        @media (min-height: 600px) {
+            body {
+                padding: 0;
+                min-height: 100vh;
+            }
         }
 
         .verify-card {
@@ -36,6 +44,7 @@
             border-radius: 18px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
             width: 100%;
+            margin: 0 auto;
         }
 
         .verify-card h1 {
@@ -50,6 +59,11 @@
             line-height: 1.6;
             color: var(--dark-grey);
             opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+
+        .verify-card p:last-child {
+            margin-bottom: 0;
         }
 
         .icon-email {
@@ -65,11 +79,13 @@
             padding: 0.85rem 2rem;
             font-weight: 600;
             color: white;
-            transition: background-color 0.3s, transform 0.2s;
             font-size: 1rem;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s, transform 0.2s;
         }
 
-        .btn-back:hover {
+        .btn-back:hover:not(:disabled) {
             background-color: #658db2;
             transform: translateY(-2px);
         }
@@ -77,26 +93,15 @@
         .text-muted {
             font-size: 0.9rem;
             opacity: 0.7;
-            margin-bottom: 0;
-        }
-
-        /* Responsif: hindari potong di mobile */
-        body {
-            padding: 1rem 0;
-        }
-
-        @media (min-height: 600px) {
-            body {
-                padding: 0;
-            }
+            margin-top: 1rem;
         }
     </style>
 </head>
 
 <body class="d-flex align-items-center justify-content-center min-vh-100">
     <main class="w-100">
-        <div class="verify-card mx-auto">
-            <div class="icon-email">
+        <div class="verify-card">
+            <div class="icon-email" aria-hidden="true">
                 <i class="fas fa-paper-plane"></i>
             </div>
             <h1>Periksa Emailmu 💬</h1>
@@ -104,10 +109,10 @@
                 Kami telah mengirimkan link verifikasi ke kotak masukmu.<br>
                 Jangan lupa cek folder <strong>Spam</strong> atau <strong>Promosi</strong> ya!
             </p>
-            <p class="text-muted mt-3">
+            <p class="text-muted">
                 Setelah verifikasi, kamu bisa mulai mengirim kejutan hangat untuk pasanganmu dari jarak jauh.
             </p>
-            <a href="?page=login" class="btn btn-back mt-4">Kembali ke Login</a>
+            <a href="?page=login" class="btn-back" aria-label="Kembali ke halaman login">Kembali ke Login</a>
         </div>
     </main>
 </body>

@@ -20,112 +20,125 @@
 
     <style>
         :root {
-            --off-white: #F5F5EC;
-            --soft-blue: #79A1BF;
-            --soft-peach: #E7A494;
+            --accent: #7093B3;
+            /* ✅ Biru pastel sesuai preferensi */
+            --accent-hover: #5d7da0;
             --dark-grey: #343D46;
+            --text-muted: #6c757d;
+            --border-color: #dee2e6;
         }
 
         body {
-            background-color: var(--off-white);
+            background-color: #FFFFFF;
+            /* ✅ Putih bersih */
             font-family: 'Poppins', sans-serif;
             color: var(--dark-grey);
+            font-size: 0.875rem;
+            padding-top: 1rem;
+            padding-bottom: 2rem;
         }
 
         .form-card {
             background: white;
-            border-radius: 18px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
-            padding: 2.25rem;
-            max-width: 600px;
-            margin: 2rem auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            /* ✅ Lebih tajam */
+            box-shadow: none;
+            /* ✅ Hilangkan shadow berlebih */
+            padding: 1.25rem;
+            /* ✅ Lebih kecil dari 2.25rem */
+            max-width: 580px;
+            margin: 1rem auto;
         }
 
         .form-card h3 {
-            font-weight: 700;
-            margin-bottom: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
             color: var(--dark-grey);
+            font-size: 1.125rem;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.625rem;
         }
 
         .form-card h3 i {
-            color: var(--soft-blue);
+            color: var(--accent);
         }
 
         .form-label {
             font-weight: 500;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.375rem;
+            font-size: 0.875rem;
             color: var(--dark-grey);
         }
 
         .form-control,
         .form-control:focus {
-            border-radius: 12px;
-            padding: 0.75rem 1rem;
-            border: 1px solid #ddd;
+            border-radius: 6px;
+            /* ✅ Lebih kecil */
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            font-size: 0.875rem;
         }
 
         .form-control:focus {
-            border-color: var(--soft-blue);
-            box-shadow: 0 0 0 3px rgba(121, 161, 191, 0.15);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(112, 147, 179, 0.15);
             outline: none;
         }
 
         textarea.form-control {
-            min-height: 120px;
+            min-height: 100px;
             resize: vertical;
         }
 
+        .btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
         .btn-primary {
-            background-color: var(--soft-blue);
-            border: none;
-            border-radius: 12px;
-            padding: 0.8rem 1.5rem;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: background-color 0.3s, transform 0.2s;
+            background-color: var(--accent);
+            border: 1px solid var(--accent);
         }
 
         .btn-primary:hover {
-            background-color: #658db2;
-            transform: translateY(-2px);
+            background-color: var(--accent-hover);
+            border-color: var(--accent-hover);
         }
 
         .btn-secondary {
-            background-color: #e0e0e0;
-            border: none;
-            border-radius: 12px;
-            padding: 0.8rem 1.5rem;
-            font-weight: 600;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
             color: var(--dark-grey);
-            transition: background-color 0.2s;
         }
 
         .btn-secondary:hover {
-            background-color: #d0d0d0;
+            background-color: #e9ecef;
         }
 
         .breadcrumb {
             background: transparent;
             padding: 0;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.8125rem;
         }
 
         .breadcrumb a {
-            color: var(--soft-blue);
+            color: var(--accent);
             text-decoration: none;
         }
 
         .breadcrumb-item.active {
-            color: var(--dark-grey);
+            color: var(--text-muted);
         }
     </style>
 </head>
 
 <body>
-    <div class="container py-3">
+    <div class="container">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="?page=admin_dashboard"><i class="fas fa-home"></i> Dashboard</a>
@@ -149,35 +162,33 @@
                     <input type="hidden" name="id" value="<?= $cat['id'] ?>">
                 <?php endif; ?>
 
-                <div class="mb-4">
+                <div class="mb-3">
                     <label class="form-label">Nama Kategori</label>
                     <input type="text" name="name" class="form-control"
                         value="<?= htmlspecialchars($cat['name'] ?? '') ?>"
                         placeholder="Contoh: Hadiah Anniversary, Surat Digital, dll." required>
                 </div>
 
-                <div class="mb-4">
+                <div class="mb-3">
                     <label class="form-label">Deskripsi (Opsional)</label>
                     <textarea name="description" class="form-control"
                         placeholder="Jelaskan untuk apa kategori ini digunakan..."><?= htmlspecialchars($cat['description'] ?? '') ?></textarea>
                 </div>
 
-                <div class="d-flex gap-3">
+                <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-2"></i><?= isset($cat) ? 'Simpan Perubahan' : 'Tambah Kategori' ?>
+                        <i class="fas fa-save me-1"></i><?= isset($cat) ? 'Simpan' : 'Tambah' ?>
                     </button>
                     <a href="?page=admin_categories" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Kembali
+                        <i class="fas fa-arrow-left me-1"></i>Kembali
                     </a>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- JavaScript ringan (opsional) -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Fokus otomatis ke input nama
             const nameInput = document.querySelector('input[name="name"]');
             if (nameInput) nameInput.focus();
         });

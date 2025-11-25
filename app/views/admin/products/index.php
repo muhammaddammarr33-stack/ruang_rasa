@@ -22,166 +22,182 @@ if (!isset($_SESSION))
 
     <style>
         :root {
-            --off-white: #F5F5EC;
-            --soft-blue: #79A1BF;
-            --soft-peach: #E7A494;
-            --dark-grey: #343D46;
+            --accent: #7093B3;
+            --accent-hover: #5d7da0;
+            --dark: #343D46;
+            --muted: #6c757d;
+            --border: #e9ecef;
+            --danger: #dc3545;
+            --warning: #e74c3c;
         }
 
         body {
-            background-color: var(--off-white);
+            background-color: #FFFFFF;
             font-family: 'Poppins', sans-serif;
-            color: var(--dark-grey);
+            color: var(--dark);
+            font-size: 0.875rem;
+            padding-top: 1rem;
+            padding-bottom: 1.5rem;
         }
 
         .admin-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.8rem;
-        }
-
-        .admin-header h3 {
-            font-weight: 700;
-            color: var(--dark-grey);
-            display: flex;
-            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
             gap: 0.75rem;
         }
 
+        .admin-header h3 {
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+        }
+
         .admin-header h3 i {
-            color: var(--soft-blue);
+            color: var(--accent);
         }
 
         .card-table {
             background: white;
-            border-radius: 18px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: none;
             overflow: hidden;
         }
 
         .table thead th {
-            background-color: #f8fafc;
+            background-color: #fafafa;
             font-weight: 600;
-            color: var(--dark-grey);
-            padding: 1rem;
+            color: var(--dark);
+            padding: 0.75rem 1rem;
+            font-size: 0.8125rem;
             white-space: nowrap;
         }
 
         .table tbody td {
-            padding: 1rem;
+            padding: 0.75rem 1rem;
             vertical-align: middle;
+            font-size: 0.875rem;
         }
 
         .product-image {
-            width: 60px;
-            height: 60px;
+            width: 52px;
+            height: 52px;
             object-fit: cover;
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+            border: 1px solid var(--border);
         }
 
         .table tbody tr:hover {
-            background-color: rgba(121, 161, 191, 0.04);
+            background-color: rgba(112, 147, 179, 0.05);
         }
 
         .btn-add {
-            background: linear-gradient(to right, var(--soft-blue), var(--soft-peach));
-            border: none;
-            border-radius: 12px;
-            padding: 0.7rem 1.4rem;
-            font-weight: 600;
+            background-color: var(--accent);
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
             color: white;
-            box-shadow: 0 4px 10px rgba(121, 161, 191, 0.25);
-            transition: transform 0.2s, box-shadow 0.2s;
+            font-size: 0.875rem;
+            transition: background-color 0.2s;
         }
 
         .btn-add:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 14px rgba(121, 161, 191, 0.35);
+            background-color: var(--accent-hover);
+            border-color: var(--accent-hover);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-edit,
+        .btn-delete {
+            padding: 0.375rem 0.625rem;
+            font-size: 0.8125rem;
+            border-radius: 5px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
         }
 
         .btn-edit {
-            background-color: #fde047;
-            border: none;
-            border-radius: 8px;
-            padding: 0.4rem 0.8rem;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #333;
-            transition: background-color 0.2s;
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
         }
 
         .btn-edit:hover {
-            background-color: #fcd32a;
+            background-color: #ffecb5;
         }
 
         .btn-delete {
-            background-color: #fca5a5;
-            border: none;
-            border-radius: 8px;
-            padding: 0.4rem 0.8rem;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #991b1b;
-            transition: background-color 0.2s;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
         }
 
         .btn-delete:hover {
-            background-color: #f87171;
+            background-color: #f1b0b7;
         }
 
         .alert {
-            border-radius: 12px;
-            padding: 0.85rem 1.25rem;
-            font-size: 0.95rem;
-            border: none;
-            margin-bottom: 1.5rem;
+            border-radius: 6px;
+            padding: 0.625rem 1rem;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.625rem;
         }
 
         .alert-success {
-            background-color: rgba(231, 164, 148, 0.2);
-            color: var(--dark-grey);
+            background-color: #f8f9fa;
+            border-color: #d1e7dd;
+            color: #0f5132;
         }
 
         .alert-danger {
-            background-color: rgba(248, 181, 181, 0.2);
-            color: #991b1b;
+            background-color: #f8f9fa;
+            border-color: #f5c6cb;
+            color: #721c24;
         }
 
         .breadcrumb {
             background: transparent;
             padding: 0;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.8125rem;
         }
 
         .breadcrumb a {
-            color: var(--soft-blue);
+            color: var(--accent);
             text-decoration: none;
         }
 
+        .breadcrumb-item.active {
+            color: var(--muted);
+        }
+
         .stock-low {
-            color: #e74c3c;
+            color: var(--warning);
             font-weight: 600;
         }
 
         .stock-normal {
-            color: var(--soft-blue);
+            color: var(--accent);
         }
 
-        /* Responsif: tumpuk di mobile */
+        /* Responsif */
         @media (max-width: 768px) {
             .admin-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-
-            .btn-add {
-                width: 100%;
+                align-items: stretch;
             }
 
             .table thead {
@@ -190,25 +206,25 @@ if (!isset($_SESSION))
 
             .table tbody tr {
                 display: block;
-                margin-bottom: 1rem;
+                margin-bottom: 0.75rem;
                 background: white;
-                border-radius: 14px;
-                padding: 1rem;
-                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                padding: 0.75rem;
             }
 
             .table tbody td {
                 display: flex;
                 justify-content: space-between;
-                padding: 0.5rem 0 !important;
+                padding: 0.375rem 0 !important;
                 border: none;
             }
 
             .table tbody td:before {
                 content: attr(data-label) ": ";
                 font-weight: 600;
-                color: var(--dark-grey);
-                flex: 0 0 120px;
+                color: var(--dark);
+                min-width: 35%;
             }
 
             .table tbody td:last-child {
@@ -216,31 +232,32 @@ if (!isset($_SESSION))
                 gap: 0.5rem;
                 justify-content: flex-start;
                 flex-wrap: wrap;
-                padding-top: 1rem !important;
+                padding-top: 0.75rem !important;
             }
 
             .table tbody td:last-child:before {
-                content: "Aksi: ";
-                align-self: flex-start;
+                content: "Aksi:";
+                min-width: auto;
             }
 
             .product-image {
-                width: 50px;
-                height: 50px;
+                width: 48px;
+                height: 48px;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="container py-3">
+    <div class="container">
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="?page=admin_dashboard"
-                        style="color: var(--soft-blue); text-decoration: none;">
+                <li class="breadcrumb-item">
+                    <a href="?page=admin_dashboard">
                         <i class="fas fa-home"></i> Dashboard
-                    </a></li>
+                    </a>
+                </li>
                 <li class="breadcrumb-item active" aria-current="page">Produk</li>
             </ol>
         </nav>
@@ -265,7 +282,7 @@ if (!isset($_SESSION))
         <div class="admin-header">
             <h3><i class="fas fa-gift"></i> Kelola Produk</h3>
             <a href="?page=admin_product_form" class="btn btn-add">
-                <i class="fas fa-plus me-1"></i> Tambah Produk
+                <i class="fas fa-plus"></i> Tambah Produk
             </a>
         </div>
 
@@ -302,7 +319,7 @@ if (!isset($_SESSION))
                                         <img src="uploads/<?= htmlspecialchars($p['image']) ?>"
                                             alt="<?= htmlspecialchars($p['name']) ?>" class="product-image">
                                     <?php else: ?>
-                                        <i class="fas fa-box text-muted" style="font-size: 1.2rem;"></i>
+                                        <i class="fas fa-box text-muted" style="font-size: 1.1rem;"></i>
                                     <?php endif; ?>
                                 </td>
                                 <td data-label="Aksi">
@@ -320,12 +337,11 @@ if (!isset($_SESSION))
                 </table>
             </div>
         <?php else: ?>
-            <div class="text-center py-5"
-                style="background: white; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                <i class="fas fa-gift fa-2x" style="color: #ccc; margin-bottom: 1rem;"></i>
-                <p class="text-muted">
+            <div class="text-center py-4" style="background: white; border: 1px solid var(--border); border-radius: 8px;">
+                <i class="fas fa-gift fa-lg" style="color: #ccc; margin-bottom: 0.75rem;"></i>
+                <p class="text-muted mb-0">
                     Belum ada produk.
-                    <a href="?page=admin_product_form" style="color: var(--soft-blue); font-weight: 500;">Tambahkan
+                    <a href="?page=admin_product_form" style="color: var(--accent); font-weight: 500;">Tambahkan
                         sekarang?</a>
                 </p>
             </div>

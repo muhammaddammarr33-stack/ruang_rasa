@@ -22,148 +22,168 @@ if (!isset($_SESSION))
 
     <style>
         :root {
-            --off-white: #F5F5EC;
-            --soft-blue: #79A1BF;
-            --soft-peach: #E7A494;
-            --dark-grey: #343D46;
+            --accent: #7093B3;
+            --accent-hover: #5d7da0;
+            --dark: #343D46;
+            --muted: #6c757d;
+            --border: #e9ecef;
+            --danger: #dc3545;
         }
 
         body {
-            background-color: var(--off-white);
+            background-color: #FFFFFF;
             font-family: 'Poppins', sans-serif;
-            color: var(--dark-grey);
+            color: var(--dark);
+            font-size: 0.875rem;
+            padding-top: 1rem;
+            padding-bottom: 1.5rem;
         }
 
         .form-card {
             background: white;
-            border-radius: 18px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
-            padding: 2.25rem;
-            max-width: 800px;
-            margin: 2rem auto;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: none;
+            padding: 1.25rem;
+            max-width: 780px;
+            margin: 1rem auto;
         }
 
         .form-card h3 {
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            color: var(--dark-grey);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--dark);
+            font-size: 1.25rem;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.625rem;
         }
 
         .form-card h3 i {
-            color: var(--soft-blue);
+            color: var(--accent);
         }
 
         .form-label {
             font-weight: 500;
-            margin-bottom: 0.5rem;
-            color: var(--dark-grey);
+            margin-bottom: 0.375rem;
+            font-size: 0.875rem;
+            color: var(--dark);
         }
 
         .form-control,
         .form-select {
-            border-radius: 12px;
-            padding: 0.75rem 1rem;
-            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border);
+            font-size: 0.875rem;
         }
 
         .form-control:focus,
         .form-select:focus {
-            border-color: var(--soft-blue);
-            box-shadow: 0 0 0 3px rgba(121, 161, 191, 0.15);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(112, 147, 179, 0.15);
             outline: none;
         }
 
         textarea.form-control {
-            min-height: 120px;
+            min-height: 100px;
             resize: vertical;
         }
 
+        .btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
         .btn-primary {
-            background-color: var(--soft-blue);
-            border: none;
-            border-radius: 12px;
-            padding: 0.8rem 1.5rem;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: background-color 0.3s, transform 0.2s;
+            background-color: var(--accent);
+            border: 1px solid var(--accent);
+            color: white;
         }
 
         .btn-primary:hover {
-            background-color: #658db2;
-            transform: translateY(-2px);
+            background-color: var(--accent-hover);
+            border-color: var(--accent-hover);
+            transform: none;
+            box-shadow: none;
         }
 
         .btn-secondary {
-            background-color: #e0e0e0;
-            border: none;
-            border-radius: 12px;
-            padding: 0.8rem 1.5rem;
-            font-weight: 600;
-            color: var(--dark-grey);
-            transition: background-color 0.2s;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            color: var(--dark);
         }
 
         .btn-secondary:hover {
-            background-color: #d0d0d0;
+            background-color: #e9ecef;
         }
 
         .btn-link-danger {
-            color: #e74c3c;
-            font-size: 0.85rem;
+            color: var(--danger);
+            font-size: 0.8125rem;
             padding: 0.25rem;
             text-decoration: none;
+            display: block;
+            text-align: center;
         }
 
         .btn-link-danger:hover {
-            color: #c0392b;
+            color: #c82333;
             text-decoration: underline;
         }
 
         .image-preview {
             display: inline-block;
-            margin-right: 12px;
-            margin-bottom: 12px;
-            border-radius: 10px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            border-radius: 6px;
             overflow: hidden;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
         }
 
         .image-preview img {
-            width: 80px;
-            height: 80px;
+            width: 72px;
+            height: 72px;
             object-fit: cover;
             display: block;
         }
 
         .alert {
-            border-radius: 12px;
-            padding: 0.85rem 1.25rem;
-            font-size: 0.95rem;
-            margin-bottom: 1.5rem;
+            border-radius: 6px;
+            padding: 0.625rem 1rem;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            border: 1px solid #f8d7da;
+            background-color: #f8f9fa;
+            color: var(--dark);
         }
 
         .alert-danger {
-            background-color: #ffecec;
-            border-left: 4px solid #e74c3c;
-            color: #c0392b;
+            background-color: #f8f9fa;
+            border-left: 3px solid var(--danger);
+            color: var(--danger);
         }
 
         .breadcrumb {
             background: transparent;
             padding: 0;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.8125rem;
         }
 
         .breadcrumb a {
-            color: var(--soft-blue);
+            color: var(--accent);
             text-decoration: none;
         }
 
+        .breadcrumb-item.active {
+            color: var(--muted);
+        }
+
         .input-section {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
         }
 
         .gallery-label {
@@ -171,19 +191,28 @@ if (!isset($_SESSION))
             align-items: center;
             gap: 0.5rem;
         }
+
+        .preview-img {
+            max-height: 140px;
+            object-fit: contain;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
     </style>
 </head>
 
 <body>
-    <div class="container py-3">
+    <div class="container">
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="?page=admin_dashboard"
-                        style="color: var(--soft-blue); text-decoration: none;">
+                <li class="breadcrumb-item">
+                    <a href="?page=admin_dashboard">
                         <i class="fas fa-home"></i> Dashboard
-                    </a></li>
-                <li class="breadcrumb-item"><a href="?page=admin_products" style="color: var(--soft-blue);">Produk</a>
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="?page=admin_products">Produk</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">
                     <?= $product ? 'Edit' : 'Tambah' ?>
@@ -199,9 +228,9 @@ if (!isset($_SESSION))
 
             <?php if (!empty($_SESSION['error'])): ?>
                 <div class="alert alert-danger">
-                    <i
-                        class="fas fa-exclamation-circle me-2"></i><?= htmlspecialchars($_SESSION['error']);
-                        unset($_SESSION['error']); ?>
+                    <i class="fas fa-exclamation-circle me-1"></i>
+                    <?= htmlspecialchars($_SESSION['error']);
+                    unset($_SESSION['error']); ?>
                 </div>
             <?php endif; ?>
 
@@ -228,7 +257,7 @@ if (!isset($_SESSION))
                 </div>
 
                 <!-- Harga, Stok, Kategori -->
-                <div class="row mb-4">
+                <div class="row mb-3">
                     <div class="col-md-4">
                         <label class="form-label">Harga (Rp)</label>
                         <input type="number" name="price" class="form-control" step="100" min="0"
@@ -258,7 +287,7 @@ if (!isset($_SESSION))
                     <?php if (!empty($product['image'])): ?>
                         <div class="mb-2">
                             <img src="uploads/<?= htmlspecialchars($product['image']) ?>" alt="Gambar utama"
-                                style="max-height: 150px; object-fit: contain; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                                class="preview-img">
                         </div>
                     <?php endif; ?>
                     <input type="file" name="image" class="form-control" accept="image/jpeg,image/png">
@@ -276,15 +305,14 @@ if (!isset($_SESSION))
                         $productModel = new Product();
                         $imgs = $productModel->getImages($product['id']);
                         if (!empty($imgs)): ?>
-                            <div class="mt-3">
-                                <p class="form-label mb-2">Gambar saat ini:</p>
+                            <div class="mt-2">
+                                <p class="form-label mb-1">Gambar saat ini:</p>
                                 <div>
                                     <?php foreach ($imgs as $img): ?>
                                         <div class="image-preview">
                                             <img src="public/uploads/<?= htmlspecialchars($img['image_path']) ?>" alt="Gallery">
                                             <a href="?page=admin_product_delete_image&img_id=<?= $img['id'] ?>&product_id=<?= $product['id'] ?>"
-                                                class="btn btn-link-danger d-block text-center"
-                                                onclick="return confirm('Hapus gambar ini?')">
+                                                class="btn-link-danger" onclick="return confirm('Hapus gambar ini?')">
                                                 Hapus
                                             </a>
                                         </div>
@@ -296,12 +324,12 @@ if (!isset($_SESSION))
                 </div>
 
                 <!-- Tombol Aksi -->
-                <div class="d-flex gap-3">
+                <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-2"></i><?= $product ? 'Simpan Perubahan' : 'Tambah Produk' ?>
+                        <i class="fas fa-save me-1"></i><?= $product ? 'Simpan' : 'Tambah Produk' ?>
                     </button>
                     <a href="?page=admin_products" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Kembali
+                        <i class="fas fa-arrow-left me-1"></i>Kembali
                     </a>
                 </div>
             </form>
@@ -310,7 +338,6 @@ if (!isset($_SESSION))
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Fokus ke input nama saat halaman terbuka
             const nameInput = document.querySelector('input[name="name"]');
             if (nameInput) nameInput.focus();
         });

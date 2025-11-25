@@ -27,6 +27,14 @@
             background-color: var(--off-white);
             font-family: 'Poppins', sans-serif;
             color: var(--dark-grey);
+            padding: 1rem 0;
+        }
+
+        @media (min-height: 600px) {
+            body {
+                padding: 0;
+                min-height: 100vh;
+            }
         }
 
         .login-card {
@@ -44,7 +52,7 @@
             margin-bottom: 0.5rem;
         }
 
-        .login-card p.subtitle {
+        .login-card .subtitle {
             font-size: 1rem;
             color: var(--dark-grey);
             opacity: 0.85;
@@ -71,6 +79,24 @@
             outline: none;
         }
 
+        .input-icon {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-icon i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--soft-blue);
+            pointer-events: none;
+        }
+
+        .input-icon input {
+            padding-left: 2.75rem;
+        }
+
         .btn-login {
             background-color: var(--soft-blue);
             border: none;
@@ -79,12 +105,19 @@
             font-weight: 600;
             font-size: 1rem;
             color: white;
+            width: 100%;
             transition: background-color 0.3s, transform 0.2s;
         }
 
-        .btn-login:hover {
+        .btn-login:hover:not(:disabled) {
             background-color: #658db2;
             transform: translateY(-2px);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.85;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .text-link {
@@ -103,6 +136,7 @@
             padding: 0.85rem 1rem;
             font-size: 0.95rem;
             margin-bottom: 1.25rem;
+            position: relative;
         }
 
         .alert-danger {
@@ -111,22 +145,6 @@
 
         .alert-success {
             border-left: 4px solid var(--soft-peach);
-        }
-
-        .input-icon {
-            position: relative;
-        }
-
-        .input-icon i {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--soft-blue);
-        }
-
-        .input-icon input {
-            padding-left: 2.75rem;
         }
 
         .shake {
@@ -150,17 +168,6 @@
                 transform: translateX(6px);
             }
         }
-
-        /* Hindari potong di mobile */
-        body {
-            padding: 1rem 0;
-        }
-
-        @media (min-height: 600px) {
-            body {
-                padding: 0;
-            }
-        }
     </style>
 </head>
 
@@ -173,14 +180,14 @@
             </div>
 
             <?php if (!empty($_SESSION['error'])): ?>
-                <div class="alert alert-danger" role="alert">
+                <div class="alert alert-danger" role="alert" aria-live="polite">
                     <?= htmlspecialchars($_SESSION['error'], ENT_QUOTES, 'UTF-8');
                     unset($_SESSION['error']); ?>
                 </div>
             <?php endif; ?>
 
             <?php if (!empty($_SESSION['success'])): ?>
-                <div class="alert alert-success" role="alert">
+                <div class="alert alert-success" role="alert" aria-live="polite">
                     <?= htmlspecialchars($_SESSION['success'], ENT_QUOTES, 'UTF-8');
                     unset($_SESSION['success']); ?>
                 </div>
@@ -189,17 +196,19 @@
             <form id="loginForm" method="POST" action="?page=login" novalidate>
                 <?= SecurityHelper::csrfInput(); ?>
 
-                <div class="mb-4 input-icon">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" name="email" class="form-control" placeholder="email@kamu.com" required>
+                <div class="input-icon">
+                    <i class="fas fa-envelope" aria-hidden="true"></i>
+                    <input type="email" name="email" class="form-control" placeholder="email@kamu.com" required
+                        autocomplete="email" aria-label="Alamat email">
                 </div>
 
-                <div class="mb-4 input-icon">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                <div class="input-icon">
+                    <i class="fas fa-lock" aria-hidden="true"></i>
+                    <input type="password" name="password" class="form-control" placeholder="••••••••" required
+                        autocomplete="current-password" aria-label="Kata sandi">
                 </div>
 
-                <button type="submit" class="btn btn-login w-100">Masuk</button>
+                <button type="submit" class="btn-login" id="loginButton">Masuk</button>
             </form>
 
             <div class="mt-4 text-center">
@@ -213,25 +222,23 @@
         document.addEventListener('DOMContentLoaded', function () {
             const loginForm = document.getElementById('loginForm');
             const emailInput = document.querySelector('input[name="email"]');
+            const loginButton = document.getElementById('loginButton');
 
-            // Jika ada error, shake & fokus ke email
+            // Shake & fokus jika ada error
             if (document.querySelector('.alert-danger')) {
                 loginForm.classList.add('shake');
                 if (emailInput) emailInput.focus();
             }
 
-            // Prevent double-submit
-            if (loginForm) {
+            // Cegah double-submit
+            if (loginForm && loginButton) {
                 loginForm.addEventListener('submit', function (e) {
-                    const btn = this.querySelector('button[type="submit"]');
-                    if (btn.disabled) {
+                    if (loginButton.disabled) {
                         e.preventDefault();
                         return;
                     }
-                    btn.disabled = true;
-                    btn.textContent = 'Memproses...';
-                    // Biarkan form submit — jangan restore otomatis
-                    // Redirect atau reload akan menghentikan ini
+                    loginButton.disabled = true;
+                    loginButton.textContent = 'Memproses...';
                 });
             }
         });

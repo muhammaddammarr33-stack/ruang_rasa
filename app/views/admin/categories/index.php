@@ -20,207 +20,213 @@
 
     <style>
         :root {
-            --off-white: #F5F5EC;
-            --soft-blue: #79A1BF;
-            --soft-peach: #E7A494;
+            --accent: #7093B3;
+            /* ✅ Biru pastel */
+            --accent-hover: #5d7da0;
             --dark-grey: #343D46;
+            --text-muted: #6c757d;
+            --border-color: #e9ecef;
         }
 
         body {
-            background-color: var(--off-white);
+            background-color: #FFFFFF;
+            /* ✅ Putih bersih */
             font-family: 'Poppins', sans-serif;
             color: var(--dark-grey);
+            font-size: 0.875rem;
+            padding-top: 1rem;
+            padding-bottom: 1.5rem;
         }
 
         .admin-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.8rem;
-        }
-
-        .admin-header h3 {
-            font-weight: 700;
-            color: var(--dark-grey);
-            display: flex;
-            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
             gap: 0.75rem;
         }
 
+        .admin-header h3 {
+            font-weight: 600;
+            color: var(--dark-grey);
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+        }
+
         .admin-header h3 i {
-            color: var(--soft-blue);
+            color: var(--accent);
         }
 
         .card-table {
             background: white;
-            border-radius: 18px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            /* ✅ Lebih tajam */
+            box-shadow: none;
+            /* ✅ Hilangkan shadow */
             overflow: hidden;
         }
 
         .table thead th {
-            background-color: #f8fafc;
+            background-color: #fafafa;
             font-weight: 600;
             color: var(--dark-grey);
-            padding: 1rem;
+            padding: 0.75rem 1rem;
+            font-size: 0.8125rem;
         }
 
         .table tbody td {
-            padding: 1rem;
+            padding: 0.75rem 1rem;
             vertical-align: middle;
+            font-size: 0.875rem;
         }
 
         .table tbody tr:hover {
-            background-color: rgba(121, 161, 191, 0.04);
+            background-color: rgba(112, 147, 179, 0.05);
         }
 
         .btn-add {
-            background: linear-gradient(to right, var(--soft-blue), var(--soft-peach));
-            border: none;
-            border-radius: 12px;
-            padding: 0.7rem 1.4rem;
-            font-weight: 600;
+            background-color: var(--accent);
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
             color: white;
-            box-shadow: 0 4px 10px rgba(121, 161, 191, 0.25);
-            transition: transform 0.2s, box-shadow 0.2s;
+            font-size: 0.875rem;
+            transition: background-color 0.2s;
         }
 
         .btn-add:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 14px rgba(121, 161, 191, 0.35);
+            background-color: var(--accent-hover);
+            border-color: var(--accent-hover);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-edit,
+        .btn-delete {
+            padding: 0.375rem 0.625rem;
+            font-size: 0.8125rem;
+            border-radius: 5px;
+            font-weight: 500;
         }
 
         .btn-edit {
-            background-color: #fde047;
-            border: none;
-            border-radius: 8px;
-            padding: 0.4rem 0.8rem;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #333;
-            transition: background-color 0.2s;
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
         }
 
         .btn-edit:hover {
-            background-color: #fcd32a;
+            background-color: #ffecb5;
         }
 
         .btn-delete {
-            background-color: #fca5a5;
-            border: none;
-            border-radius: 8px;
-            padding: 0.4rem 0.8rem;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #991b1b;
-            transition: background-color 0.2s;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
         }
 
         .btn-delete:hover {
-            background-color: #f87171;
+            background-color: #f1b0b7;
         }
 
         .alert {
-            border-radius: 12px;
-            padding: 0.85rem 1.25rem;
-            font-size: 0.95rem;
-            border: none;
-            margin-bottom: 1.5rem;
-        }
-
-        .alert-success {
-            background-color: rgba(231, 164, 148, 0.2);
+            border-radius: 6px;
+            padding: 0.625rem 1rem;
+            font-size: 0.875rem;
+            border: 1px solid #e9ecef;
+            margin-bottom: 1rem;
+            background-color: #f8f9fa;
             color: var(--dark-grey);
         }
 
         .breadcrumb {
             background: transparent;
             padding: 0;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.8125rem;
         }
 
         .breadcrumb a {
-            color: var(--soft-blue);
+            color: var(--accent);
             text-decoration: none;
         }
 
-        /* Responsif: tumpuk aksi di mobile */
+        .breadcrumb-item.active {
+            color: var(--text-muted);
+        }
+
+        /* Responsif: versi mobile tetap ringkas */
         @media (max-width: 576px) {
             .admin-header {
                 flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-
-            .btn-add {
-                width: 100%;
-            }
-
-            .table td,
-            .table th {
-                font-size: 0.9rem;
-                padding: 0.75rem;
+                align-items: stretch;
             }
 
             .table thead {
                 display: none;
             }
 
-            /* Stack card-style di mobile */
             .table tbody tr {
                 display: block;
-                margin-bottom: 1rem;
+                margin-bottom: 0.75rem;
                 background: white;
-                border-radius: 14px;
-                padding: 1rem;
-                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+                border: 1px solid var(--border-color);
+                border-radius: 6px;
+                padding: 0.75rem;
             }
 
             .table tbody td {
                 display: flex;
                 justify-content: space-between;
-                padding: 0.4rem 0 !important;
+                padding: 0.375rem 0 !important;
+                font-size: 0.875rem;
             }
 
             .table tbody td:before {
                 content: attr(data-label) ": ";
                 font-weight: 600;
-                color: var(--dark-grey);
+                min-width: 40%;
             }
 
             .table tbody td:last-child {
                 display: flex;
                 gap: 0.5rem;
-                justify-content: flex-start;
                 flex-wrap: wrap;
             }
 
             .table tbody td:last-child:before {
-                content: "Aksi: ";
+                content: "Aksi:";
+                min-width: auto;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="container py-3">
+    <div class="container">
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="?page=admin_dashboard"
-                        style="color: var(--soft-blue); text-decoration: none;">
+                <li class="breadcrumb-item">
+                    <a href="?page=admin_dashboard">
                         <i class="fas fa-home"></i> Dashboard
-                    </a></li>
+                    </a>
+                </li>
                 <li class="breadcrumb-item active" aria-current="page">Kategori</li>
             </ol>
         </nav>
 
         <!-- Alert -->
         <?php if (!empty($_SESSION['success'])): ?>
-            <div class="alert alert-success">
-                <i
-                    class="fas fa-check-circle me-2"></i><?= htmlspecialchars($_SESSION['success']);
-                    unset($_SESSION['success']); ?>
+            <div class="alert">
+                <i class="fas fa-check-circle me-1"></i>
+                <?= htmlspecialchars($_SESSION['success']);
+                unset($_SESSION['success']); ?>
             </div>
         <?php endif; ?>
 
@@ -232,7 +238,7 @@
             </a>
         </div>
 
-        <!-- Tabel -->
+        <!-- Tabel atau Pesan Kosong -->
         <?php if (!empty($categories)): ?>
             <div class="card-table">
                 <table class="table">
@@ -252,11 +258,11 @@
                                 <td data-label="Deskripsi"><?= htmlspecialchars($c['description'] ?: '–') ?></td>
                                 <td data-label="Aksi">
                                     <a href="?page=admin_category_form&id=<?= $c['id'] ?>" class="btn btn-edit">
-                                        <i class="fas fa-edit"></i> Edit
+                                        <i class="fas fa-edit me-1"></i>Edit
                                     </a>
                                     <a href="?page=admin_category_delete&id=<?= $c['id'] ?>" class="btn btn-delete"
                                         onclick="return confirm('Yakin ingin menghapus kategori “<?= addslashes(htmlspecialchars($c['name'])) ?>”?\n\nTindakan ini tidak bisa dibatalkan.')">
-                                        <i class="fas fa-trash-alt"></i> Hapus
+                                        <i class="fas fa-trash-alt me-1"></i>Hapus
                                     </a>
                                 </td>
                             </tr>
@@ -265,19 +271,16 @@
                 </table>
             </div>
         <?php else: ?>
-            <div class="text-center py-5"
-                style="background: white; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                <i class="fas fa-inbox fa-2x" style="color: #ccc; margin-bottom: 1rem;"></i>
-                <p class="text-muted">Belum ada kategori. <a href="?page=admin_category_form"
-                        style="color: var(--soft-blue);">Tambahkan sekarang?</a></p>
+            <div class="text-center py-4" style="background: white; border: 1px solid #e9ecef; border-radius: 8px;">
+                <i class="fas fa-inbox fa-lg" style="color: #ccc; margin-bottom: 0.75rem;"></i>
+                <p class="text-muted mb-0">
+                    Belum ada kategori.
+                    <a href="?page=admin_category_form" style="color: var(--accent); text-decoration: none;">Tambahkan
+                        sekarang?</a>
+                </p>
             </div>
         <?php endif; ?>
     </div>
-
-    <script>
-        // Tidak perlu library berat — confirm native sudah cukup
-        // Tapi kita pastikan pesan aman dari XSS via addslashes() di PHP
-    </script>
 </body>
 
 </html>

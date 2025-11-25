@@ -84,6 +84,11 @@ class AdminRewardsController
             $this->model->delete($id);
             $_SESSION['success'] = "Reward dihapus.";
         }
+        if ($id <= 0) {
+            $_SESSION['error'] = "ID reward tidak valid";
+            header("Location: ?page=admin_rewards");
+            exit;
+        }
         header("Location: ?page=admin_rewards");
     }
 }

@@ -3,42 +3,139 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Feedback Konsultasi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Feedback Konsultasi | Ruang Rasa</title>
+
+    <!-- Google Fonts: Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --off-white: #F5F5EC;
+            --soft-blue: #79A1BF;
+            --soft-peach: #E7A494;
+            --dark-grey: #343D46;
+        }
+
+        body {
+            background-color: var(--off-white);
+            font-family: 'Poppins', sans-serif;
+            color: var(--dark-grey);
+            padding: 1rem 0;
+        }
+
+        .feedback-card,
+        .suggestion-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: none;
+        }
+
+        .feedback-card .card-body {
+            padding: 1.5rem;
+        }
+
+        .suggestion-card {
+            height: 100%;
+            border: 1px solid #f0f0f0;
+        }
+
+        .suggestion-card .card-body {
+            padding: 1.25rem;
+        }
+
+        .suggestion-card h6 {
+            font-weight: 600;
+            color: var(--dark-grey);
+            margin-bottom: 0.5rem;
+        }
+
+        .suggestion-card .text-muted {
+            font-weight: 600;
+            color: var(--soft-blue);
+            margin-bottom: 0.75rem;
+        }
+
+        .form-check-input:checked {
+            background-color: var(--soft-blue);
+            border-color: var(--soft-blue);
+        }
+
+        .form-check-label {
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .btn-submit {
+            background-color: var(--soft-blue);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            background-color: #658db2;
+            transform: translateY(-2px);
+        }
+
+        .section-divider {
+            margin: 2rem 0;
+        }
+
+        @media (max-width: 768px) {
+
+            .feedback-card .card-body,
+            .suggestion-card .card-body {
+                padding: 1.25rem;
+            }
+        }
+    </style>
 </head>
 
 <body>
-
     <div class="container py-4">
+        <h3 class="mb-4">💬 Feedback Konsultasi</h3>
 
-        <h3 class="mb-3">💬 Feedback Konsultasi</h3>
-
-        <div class="card mb-4">
+        <!-- Detail Konsultasi -->
+        <div class="feedback-card mb-4">
             <div class="card-body">
-                <h5 class="card-title mb-1">Untuk: <?= htmlspecialchars($consultation['recipient']) ?></h5>
-                <p class="card-text mb-1">Acara: <strong><?= htmlspecialchars($consultation['occasion']) ?></strong></p>
-                <p class="card-text mb-1">Usia: <?= htmlspecialchars($consultation['age_range']) ?></p>
-                <p class="card-text mb-1">Minat:
+                <h5 class="card-title mb-2">Untuk:
+                    <?= htmlspecialchars($consultation['recipient'] ?? '-', ENT_QUOTES, 'UTF-8') ?></h5>
+                <p class="mb-1"><strong>Acara:</strong>
+                    <?= htmlspecialchars($consultation['occasion'] ?? '-', ENT_QUOTES, 'UTF-8') ?></p>
+                <p class="mb-1"><strong>Usia:</strong>
+                    <?= htmlspecialchars($consultation['age_range'] ?? '-', ENT_QUOTES, 'UTF-8') ?></p>
+                <p class="mb-1">
+                    <strong>Minat:</strong>
                     <?php
-                    $interests = json_decode($consultation['interests'], true);
-                    echo $interests ? implode(', ', $interests) : '-';
+                    $interests = !empty($consultation['interests']) ? json_decode($consultation['interests'], true) : false;
+                    echo $interests ? htmlspecialchars(implode(', ', $interests), ENT_QUOTES, 'UTF-8') : '-';
                     ?>
                 </p>
-                <p class="card-text mb-0">Anggaran:
-                    <strong><?= htmlspecialchars($consultation['budget_range']) ?></strong></p>
+                <p class="mb-0"><strong>Anggaran:</strong>
+                    <?= htmlspecialchars($consultation['budget_range'] ?? '-', ENT_QUOTES, 'UTF-8') ?></p>
             </div>
         </div>
 
-        <h5>💡 Rekomendasi Produk</h5>
-        <?php if ($suggestions): ?>
-            <div class="row mt-3">
+        <!-- Rekomendasi Produk -->
+        <h5 class="mb-3">💡 Rekomendasi Produk</h5>
+        <?php if (!empty($suggestions)): ?>
+            <div class="row g-3">
                 <?php foreach ($suggestions as $s): ?>
-                    <div class="col-md-4 mb-3">
-                        <div class="card h-100">
+                    <div class="col-md-4">
+                        <div class="suggestion-card">
                             <div class="card-body">
-                                <h6><?= htmlspecialchars($s['product_name']) ?></h6>
-                                <p class="text-muted"><?= number_format($s['price'], 0, ',', '.') ?></p>
-                                <p><?= htmlspecialchars($s['reason']) ?></p>
+                                <h6><?= htmlspecialchars($s['product_name'] ?? '-', ENT_QUOTES, 'UTF-8') ?></h6>
+                                <p class="text-muted mb-2">Rp <?= number_format($s['price'] ?? 0, 0, ',', '.') ?></p>
+                                <p class="small"><?= htmlspecialchars($s['reason'] ?? '', ENT_QUOTES, 'UTF-8') ?></p>
                             </div>
                         </div>
                     </div>
@@ -48,14 +145,14 @@
             <p class="text-muted">Belum ada rekomendasi.</p>
         <?php endif; ?>
 
-        <hr>
+        <div class="section-divider"></div>
 
-        <hr>
-
-        <h5>🗣️ Apakah rekomendasi ini membantu?</h5>
-        <form method="post" action="?page=consultation_feedback_submit&id=<?= $_GET['id'] ?>">
-            <div class="mb-3">
-                <div class="form-check mb-2">
+        <!-- Form Feedback -->
+        <h5 class="mb-3">🗣️ Apakah rekomendasi ini membantu?</h5>
+        <form method="post"
+            action="?page=consultation_feedback_submit&id=<?= htmlspecialchars($_GET['id'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+            <div class="mb-4">
+                <div class="form-check mb-3">
                     <input class="form-check-input" type="radio" name="satisfaction" value="satisfied" id="sat"
                         required>
                     <label class="form-check-label" for="sat">✅ Ya, saya puas</label>
@@ -66,11 +163,9 @@
                     <label class="form-check-label" for="unsat">❌ Belum sesuai, saya butuh bantuan lebih lanjut</label>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">Kirim Feedback</button>
+            <button type="submit" class="btn-submit" aria-label="Kirim feedback">Kirim Feedback</button>
         </form>
-
     </div>
-
 </body>
 
 </html>

@@ -59,7 +59,8 @@ foreach ($cart as $item) {
             gap: 0.75rem;
         }
 
-        .checkout-card {
+        .checkout-card,
+        .summary-card {
             background: white;
             border-radius: 18px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
@@ -77,6 +78,7 @@ foreach ($cart as $item) {
             border-radius: 12px;
             padding: 0.75rem 1rem;
             border: 1px solid #ddd;
+            font-size: 1rem;
         }
 
         .form-control:focus,
@@ -92,8 +94,8 @@ foreach ($cart as $item) {
         }
 
         .btn-checkout {
-            background: linear-gradient(to right, var(--soft-blue), var(--soft-peach));
-            color: white;
+            background: white;
+            color: var(--soft-blue);
             border: none;
             border-radius: 12px;
             padding: 0.85rem;
@@ -102,19 +104,14 @@ foreach ($cart as $item) {
             width: 100%;
             box-shadow: 0 4px 12px rgba(121, 161, 191, 0.3);
             transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
         }
 
-        .btn-checkout:hover {
+        .btn-checkout:hover:not(:disabled) {
+            background-color: var(--soft-blue);
+            color: white;
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(121, 161, 191, 0.4);
-        }
-
-        .summary-card {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-            padding: 1.5rem;
-            height: fit-content;
         }
 
         .summary-title {
@@ -123,19 +120,21 @@ foreach ($cart as $item) {
             color: var(--dark-grey);
         }
 
-        .list-group-item {
-            border: none;
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
             padding: 0.75rem 0;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #f0f0f0;
         }
 
-        .list-group-item:last-child {
+        .summary-item:last-child {
             border-bottom: none;
         }
 
         .item-name {
             font-weight: 600;
             color: var(--dark-grey);
+            display: block;
         }
 
         .item-detail {
@@ -151,8 +150,17 @@ foreach ($cart as $item) {
             margin-top: 1rem;
             padding-top: 1rem;
             border-top: 2px solid var(--off-white);
+            display: flex;
+            justify-content: space-between;
         }
 
+        .form-text {
+            font-size: 0.85rem;
+            color: #777;
+            margin-top: 0.25rem;
+        }
+
+        /* Breadcrumb */
         .breadcrumb {
             background: transparent;
             padding: 0;
@@ -164,6 +172,7 @@ foreach ($cart as $item) {
             text-decoration: none;
         }
 
+        /* Responsif */
         @media (max-width: 768px) {
 
             .checkout-card,
@@ -173,6 +182,10 @@ foreach ($cart as $item) {
 
             .btn-checkout {
                 font-size: 1rem;
+            }
+
+            .summary-card {
+                margin-top: 2rem;
             }
         }
     </style>
@@ -190,64 +203,68 @@ foreach ($cart as $item) {
         </nav>
 
         <h1 class="checkout-header">
-            <i class="fas fa-receipt"></i> Konfirmasi Pesanan
+            <i class="fas fa-receipt" aria-hidden="true"></i> Konfirmasi Pesanan
         </h1>
 
         <div class="row g-4">
             <!-- Form Checkout -->
             <div class="col-md-7">
                 <div class="checkout-card">
-                    <form id="checkout-form" method="post" action="?page=checkout_process">
-                        <!-- Hidden input for product total (used by JS) -->
-                        <input type="hidden" id="product_total" value="<?= $productTotal ?>">
-
-                        <!-- Hidden inputs for location names -->
+                    <form id="checkout-form" method="post" action="?page=checkout_process" novalidate>
+                        <!-- Hidden inputs -->
+                        <input type="hidden" id="product_total" value="<?= (int) $productTotal ?>">
                         <input type="hidden" name="province_name" id="province_name">
                         <input type="hidden" name="city_name" id="city_name">
                         <input type="hidden" name="district_name" id="district_name">
+                        <input type="hidden" name="shipping_courier" id="shipping_courier">
+                        <input type="hidden" name="shipping_cost" id="shipping_cost">
 
                         <div class="mb-4">
-                            <label class="form-label">Nama Penerima</label>
-                            <input type="text" name="recipient_name" class="form-control" required
+                            <label for="recipient_name" class="form-label">Nama Penerima</label>
+                            <input type="text" id="recipient_name" name="recipient_name" class="form-control" required
                                 placeholder="Siapa yang akan menerima hadiah ini?"
-                                value="<?= htmlspecialchars($_SESSION['user']['name'] ?? '') ?>">
+                                value="<?= htmlspecialchars($_SESSION['user']['name'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                                aria-describedby="recipient-help">
+                            <div id="recipient-help" class="form-text">Pastikan nama sesuai KTP atau identitas resmi
+                            </div>
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label">Alamat Pengiriman Lengkap (Nomor, Jalan, Gedung, dll)</label>
-                            <textarea name="shipping_address" class="form-control" rows="3" required
-                                placeholder="Contoh: Jl. Mawar No. 10, Gedung Anggrek Lt. 3"><?= htmlspecialchars($_POST['shipping_address'] ?? '') ?></textarea>
-                            <small class="form-text text-muted">Alamat detail tanpa nama kota/provinsi</small>
+                            <label for="shipping_address" class="form-label">Alamat Pengiriman Lengkap</label>
+                            <textarea id="shipping_address" name="shipping_address" class="form-control" rows="3"
+                                required placeholder="Contoh: Jl. Mawar No. 10, Gedung Anggrek Lt. 3"
+                                aria-describedby="address-help"><?= htmlspecialchars($_POST['shipping_address'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+                            <div id="address-help" class="form-text">Tanpa nama kota/provinsi — hanya detail alamat
+                            </div>
                         </div>
 
-                        <h4>Informasi Pengiriman</h4>
+                        <h4 class="mb-3">Informasi Pengiriman</h4>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Provinsi</label>
-                                <select id="province" class="form-select">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="province" class="form-label">Provinsi</label>
+                                <select id="province" class="form-select" aria-describedby="province-help">
                                     <option value="">Pilih Provinsi</option>
                                 </select>
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Kota / Kabupaten</label>
+                            <div class="col-md-6">
+                                <label for="city" class="form-label">Kota / Kabupaten</label>
                                 <select id="city" name="shipping_city" class="form-select" disabled>
                                     <option value="">Pilih Kota/Kabupaten</option>
                                 </select>
                             </div>
-
-                            <div class="mb-3">
-                                <label for="district" class="form-label">Kecamatan (District)</label>
-                                <select id="district" name="district_id" class="form-select" disabled>
-                                    <option value="">Pilih Kecamatan</option>
-                                </select>
-                            </div>
                         </div>
 
-                        <div class="row mt-3">
+                        <div class="mb-3">
+                            <label for="district" class="form-label">Kecamatan</label>
+                            <select id="district" name="district_id" class="form-select" disabled>
+                                <option value="">Pilih Kecamatan</option>
+                            </select>
+                        </div>
+
+                        <div class="row mb-3">
                             <div class="col-md-6">
-                                <label>Kurir</label>
+                                <label for="courier" class="form-label">Kurir</label>
                                 <select id="courier" class="form-select">
                                     <option value="">Pilih Kurir</option>
                                     <option value="jne">JNE</option>
@@ -255,49 +272,42 @@ foreach ($cart as $item) {
                                     <option value="pos">POS</option>
                                 </select>
                             </div>
-
                             <div class="col-md-6">
-                                <label>Layanan</label>
-                                <select id="service" class="form-select"></select>
+                                <label for="service" class="form-label">Layanan</label>
+                                <select id="service" class="form-select" disabled>
+                                    <option value="">Pilih Layanan</option>
+                                </select>
                             </div>
                         </div>
 
-                        <input type="hidden" name="shipping_courier" id="shipping_courier">
-                        <input type="hidden" name="shipping_cost" id="shipping_cost">
-
-                        <div class="mt-3">
+                        <div class="mb-4">
                             <strong>Total Ongkir:</strong> <span id="ongkir_total">Rp0</span>
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label">Metode Pembayaran</label>
+                            <label class="form-label d-block">Metode Pembayaran</label>
                             <div class="d-flex flex-column gap-2">
-                                <div class="form-check">
-                                    <input type="radio" name="payment_method" value="cod" id="pm1"
-                                        class="form-check-input" checked>
-                                    <label class="form-check-label" for="pm1">
-                                        <i class="fas fa-truck me-2"></i> Bayar di Tempat (COD)
-                                    </label>
-                                </div>
                                 <div class="form-check">
                                     <input type="radio" name="payment_method" value="transfer" id="pm2"
                                         class="form-check-input">
                                     <label class="form-check-label" for="pm2">
-                                        <i class="fas fa-university me-2"></i> Transfer Bank (BCA, BNI, Mandiri)
+                                        <i class="fas fa-university me-2" aria-hidden="true"></i> Transfer Bank (BCA,
+                                        BNI, Mandiri)
                                     </label>
                                 </div>
                                 <div class="form-check">
                                     <input type="radio" name="payment_method" value="ewallet" id="pm3"
                                         class="form-check-input">
                                     <label class="form-check-label" for="pm3">
-                                        <i class="fas fa-wallet me-2"></i> E-Wallet (GoPay, OVO, DANA)
+                                        <i class="fas fa-wallet me-2" aria-hidden="true"></i> E-Wallet (GoPay, OVO,
+                                        DANA)
                                     </label>
                                 </div>
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-checkout" id="checkout-btn">
-                            <i class="fas fa-check-circle me-2"></i>
+                        <button type="submit" class="btn-checkout" id="checkout-btn">
+                            <i class="fas fa-check-circle me-2" aria-hidden="true"></i>
                             Bayar & Kirim Kejutan — <span id="btn-total">Rp
                                 <?= number_format($productTotal, 0, ',', '.') ?></span>
                         </button>
@@ -309,25 +319,26 @@ foreach ($cart as $item) {
             <div class="col-md-5">
                 <div class="summary-card">
                     <h5 class="summary-title">Ringkasan Pesanan</h5>
-                    <ul class="list-group">
+                    <div class="summary-items">
                         <?php foreach ($cart as $it):
                             $price = $it['price'];
                             $discount = $it['discount'] ?? 0;
                             $finalPrice = $discount > 0 ? ($price - ($price * $discount / 100)) : $price;
                             ?>
-                            <li class="list-group-item">
+                            <div class="summary-item">
                                 <div>
-                                    <div class="item-name"><?= htmlspecialchars($it['name']) ?></div>
-                                    <small class="text-muted">Qty: <?= $it['qty'] ?></small>
+                                    <span class="item-name"><?= htmlspecialchars($it['name'], ENT_QUOTES, 'UTF-8') ?></span>
+                                    <small class="text-muted">Qty: <?= (int) $it['qty'] ?></small>
                                     <?php if (!empty($it['custom_text'])): ?>
-                                        <div class="item-detail">Teks: "<?= htmlspecialchars($it['custom_text']) ?>"</div>
+                                        <div class="item-detail">Teks:
+                                            "<?= htmlspecialchars($it['custom_text'], ENT_QUOTES, 'UTF-8') ?>"</div>
                                     <?php endif; ?>
                                 </div>
                                 <div class="fw-bold">Rp <?= number_format($finalPrice * $it['qty'], 0, ',', '.') ?></div>
-                            </li>
+                            </div>
                         <?php endforeach; ?>
-                    </ul>
-                    <div class="total-row d-flex justify-content-between">
+                    </div>
+                    <div class="total-row">
                         <span>Total Pembayaran</span>
                         <span id="summary-total">Rp <?= number_format($productTotal, 0, ',', '.') ?></span>
                     </div>
@@ -341,7 +352,6 @@ foreach ($cart as $item) {
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-
             // --- Elemen DOM ---
             const provinceSelect = document.querySelector("#province");
             const citySelect = document.querySelector("#city");
@@ -359,7 +369,7 @@ foreach ($cart as $item) {
             const cityNameInput = document.getElementById('city_name');
             const districtNameInput = document.getElementById('district_name');
 
-            // Reset select
+            // Reset select helper
             function resetSelect(selectElement, placeholderText, disable = true) {
                 selectElement.innerHTML = `<option value="">${placeholderText}</option>`;
                 selectElement.disabled = disable;
@@ -387,16 +397,12 @@ foreach ($cart as $item) {
                 .catch(err => {
                     console.error("Error loading provinces:", err);
                     provinceSelect.innerHTML = `<option value="">(Error)</option>`;
-                    provinceSelect.disabled = true;
                 });
 
-            // Load cities & update province name
             provinceSelect.addEventListener("change", function () {
                 const prov = this.value;
                 resetSelect(citySelect, "Memuat Kota...");
                 resetSelect(serviceSelect, "Pilih Layanan");
-
-                // Simpan nama provinsi
                 provinceNameInput.value = prov ? this.options[this.selectedIndex].text : '';
 
                 if (!prov) {
@@ -423,13 +429,10 @@ foreach ($cart as $item) {
                     });
             });
 
-            // Load districts & update city name
             citySelect.addEventListener("change", function () {
                 const city = this.value;
                 resetSelect(districtSelect, "Memuat Kecamatan...");
                 resetSelect(serviceSelect, "Pilih Layanan");
-
-                // Simpan nama kota
                 cityNameInput.value = city ? this.options[this.selectedIndex].text : '';
 
                 if (!city) {
@@ -455,12 +458,10 @@ foreach ($cart as $item) {
                     });
             });
 
-            // Update district name
             districtSelect.addEventListener("change", function () {
                 districtNameInput.value = this.value ? this.options[this.selectedIndex].text : '';
             });
 
-            // Calculate shipping cost
             function calculateCost() {
                 const destination = districtSelect.value;
                 const courier = courierSelect.value;
@@ -495,10 +496,10 @@ foreach ($cart as $item) {
                                     const cost = item.cost;
                                     const etd = item.etd || "?";
                                     serviceSelect.innerHTML += `
-                                        <option value="${cost}" data-service="${item.service}">
-                                            ${item.service} - Rp${new Intl.NumberFormat('id-ID').format(cost)} (${etd} hari)
-                                        </option>
-                                    `;
+                    <option value="${cost}" data-service="${item.service}">
+                      ${item.service} - Rp${new Intl.NumberFormat('id-ID').format(cost)} (${etd} hari)
+                    </option>
+                  `;
                                 }
                             });
                         }
@@ -520,7 +521,6 @@ foreach ($cart as $item) {
             citySelect.addEventListener("change", calculateCost);
             districtSelect.addEventListener("change", calculateCost);
 
-            // Update ongkir & total
             serviceSelect.addEventListener("change", function () {
                 const cost = this.value ? parseInt(this.value) : 0;
                 const service = this.selectedOptions[0]?.dataset.service || '';
@@ -531,14 +531,12 @@ foreach ($cart as $item) {
                 updateFinalTotal(cost);
             });
 
-            // Fungsi update total akhir
             function updateFinalTotal(shippingCost) {
                 const final = productTotal + shippingCost;
                 btnTotalEl.textContent = "Rp" + new Intl.NumberFormat('id-ID').format(final);
                 summaryTotalEl.textContent = "Rp" + new Intl.NumberFormat('id-ID').format(final);
             }
 
-            // Validasi sebelum submit
             form.addEventListener('submit', function (e) {
                 const shippingCost = document.getElementById('shipping_cost').value;
                 if (!shippingCost || parseInt(shippingCost) <= 0) {
@@ -547,7 +545,6 @@ foreach ($cart as $item) {
                     return false;
                 }
 
-                // Validasi alamat lengkap
                 if (!districtSelect.value || !citySelect.value || !provinceSelect.value) {
                     alert('Silakan lengkapi alamat pengiriman (Provinsi, Kota, Kecamatan).');
                     e.preventDefault();

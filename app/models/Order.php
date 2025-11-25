@@ -395,4 +395,12 @@ class Order
         return $stmt->execute([$newTotal, $orderId]);
     }
 
+    public function getRecentUsers($limit = 5)
+    {
+        $stmt = $this->db->prepare("SELECT id, name, created_at FROM users ORDER BY created_at DESC LIMIT :limit");
+        $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
 }

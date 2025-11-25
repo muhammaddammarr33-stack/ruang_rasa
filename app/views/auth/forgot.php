@@ -27,6 +27,14 @@
             background-color: var(--off-white);
             font-family: 'Poppins', sans-serif;
             color: var(--dark-grey);
+            padding: 1rem 0;
+        }
+
+        @media (min-height: 600px) {
+            body {
+                padding: 0;
+                min-height: 100vh;
+            }
         }
 
         .reset-card {
@@ -45,7 +53,7 @@
             color: var(--dark-grey);
         }
 
-        .reset-card p.subtitle {
+        .reset-card .subtitle {
             font-size: 1rem;
             color: var(--dark-grey);
             opacity: 0.85;
@@ -62,6 +70,8 @@
             border-radius: 12px;
             padding: 0.75rem 1rem;
             border: 1px solid #ddd;
+            font-size: 1rem;
+            transition: border-color 0.25s, box-shadow 0.25s;
         }
 
         .form-control:focus {
@@ -70,19 +80,45 @@
             outline: none;
         }
 
+        .input-icon {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-icon i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--soft-blue);
+            pointer-events: none;
+        }
+
+        .input-icon input {
+            padding-left: 2.75rem;
+        }
+
         .btn-reset {
             background-color: var(--soft-blue);
             border: none;
             border-radius: 12px;
             padding: 0.85rem;
             font-weight: 600;
+            font-size: 1rem;
             color: white;
+            width: 100%;
             transition: background-color 0.3s, transform 0.2s;
         }
 
-        .btn-reset:hover {
+        .btn-reset:hover:not(:disabled) {
             background-color: #658db2;
             transform: translateY(-2px);
+        }
+
+        .btn-reset:disabled {
+            opacity: 0.85;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .text-link {
@@ -101,26 +137,11 @@
             padding: 0.85rem 1rem;
             font-size: 0.95rem;
             margin-bottom: 1.25rem;
+            position: relative;
         }
 
         .alert-danger {
             border-left: 4px solid #e74c3c;
-        }
-
-        .input-icon {
-            position: relative;
-        }
-
-        .input-icon i {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--soft-blue);
-        }
-
-        .input-icon input {
-            padding-left: 2.75rem;
         }
 
         .shake {
@@ -144,17 +165,6 @@
                 transform: translateX(6px);
             }
         }
-
-        /* Responsif: hindari potong di mobile */
-        body {
-            padding: 1rem 0;
-        }
-
-        @media (min-height: 600px) {
-            body {
-                padding: 0;
-            }
-        }
     </style>
 </head>
 
@@ -168,7 +178,7 @@
             </div>
 
             <?php if (!empty($_SESSION['error'])): ?>
-                <div class="alert alert-danger" role="alert">
+                <div class="alert alert-danger" role="alert" aria-live="polite">
                     <?= htmlspecialchars($_SESSION['error'], ENT_QUOTES, 'UTF-8');
                     unset($_SESSION['error']); ?>
                 </div>
@@ -177,12 +187,13 @@
             <form id="forgotForm" method="POST" action="?page=auth_forgot" novalidate>
                 <?= SecurityHelper::csrfInput(); ?>
 
-                <div class="mb-4 input-icon">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" name="email" class="form-control" placeholder="email@kamu.com" required>
+                <div class="input-icon">
+                    <i class="fas fa-envelope" aria-hidden="true"></i>
+                    <input type="email" name="email" class="form-control" placeholder="email@kamu.com" required
+                        autocomplete="email" aria-label="Alamat email untuk reset password">
                 </div>
 
-                <button type="submit" class="btn btn-reset w-100">Kirim Link Reset</button>
+                <button type="submit" class="btn-reset" id="resetButton">Kirim Link Reset</button>
             </form>
 
             <div class="mt-4 text-center">
@@ -195,24 +206,23 @@
         document.addEventListener('DOMContentLoaded', function () {
             const form = document.getElementById('forgotForm');
             const emailInput = document.querySelector('input[name="email"]');
+            const resetButton = document.getElementById('resetButton');
 
-            // Jika ada error, shake & fokus ke email
+            // Shake & fokus jika ada error
             if (document.querySelector('.alert-danger')) {
                 form.classList.add('shake');
                 if (emailInput) emailInput.focus();
             }
 
-            // Prevent double-submit
-            if (form) {
+            // Cegah double-submit
+            if (form && resetButton) {
                 form.addEventListener('submit', function (e) {
-                    const btn = this.querySelector('button[type="submit"]');
-                    if (btn.disabled) {
+                    if (resetButton.disabled) {
                         e.preventDefault();
                         return;
                     }
-                    btn.disabled = true;
-                    btn.textContent = 'Mengirim...';
-                    // Biarkan form submit — jangan restore otomatis
+                    resetButton.disabled = true;
+                    resetButton.textContent = 'Mengirim...';
                 });
             }
         });

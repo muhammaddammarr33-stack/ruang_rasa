@@ -27,6 +27,17 @@
             background-color: var(--off-white);
             font-family: 'Poppins', sans-serif;
             color: var(--dark-grey);
+            padding: 1.5rem 0;
+        }
+
+        .promo-header {
+            font-weight: 700;
+            font-size: 1.8rem;
+            color: var(--dark-grey);
+            margin-bottom: 2.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
 
         .promo-card {
@@ -43,69 +54,100 @@
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
         }
 
-        .promo-title {
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .card-title {
             font-weight: 700;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             color: var(--dark-grey);
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
         }
 
         .discount-badge {
             background: linear-gradient(to right, var(--soft-blue), var(--soft-peach));
             color: white;
             font-weight: 700;
-            padding: 0.35rem 0.8rem;
+            padding: 0.4rem 0.9rem;
             border-radius: 12px;
             display: inline-block;
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             margin: 0.5rem 0;
+            letter-spacing: -0.02em;
         }
 
         .promo-description {
             color: var(--dark-grey);
             opacity: 0.9;
             line-height: 1.6;
+            margin-bottom: 1rem;
         }
 
         .promo-period {
             background-color: rgba(121, 161, 191, 0.08);
             color: var(--soft-blue);
-            padding: 0.4rem 0.8rem;
+            padding: 0.5rem 0.9rem;
             border-radius: 10px;
             font-size: 0.85rem;
-            margin-top: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .btn-back {
+        .btn-back-home {
             background-color: var(--soft-blue);
             color: white;
             border: none;
             border-radius: 12px;
-            padding: 0.6rem 1.2rem;
+            padding: 0.65rem 1.4rem;
             font-weight: 600;
-            transition: background-color 0.2s;
+            font-size: 1rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            transition: background-color 0.2s, transform 0.2s;
         }
 
-        .btn-back:hover {
+        .btn-back-home:hover {
             background-color: #658db2;
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 768px) {
+            .promo-header {
+                font-size: 1.6rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .promo-actions {
+                width: 100%;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div class="container py-5">
-        <div class="d-flex justify-content-between align-items-center mb-5">
-            <h2 class="promo-title">
-                <i class="fas fa-bolt text-warning"></i> Promo Spesial
+    <div class="container py-4">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="?page=landing">Beranda</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Keranjang</li>
+            </ol>
+        </nav>
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5">
+            <h2 class="promo-header">
+                <i class="fas fa-bolt text-warning" aria-hidden="true"></i> Promo Spesial
             </h2>
-            <a href="?page=landing" class="btn btn-back">
-                <i class="fas fa-arrow-left"></i> Beranda
-            </a>
         </div>
 
         <?php if (empty($promos)): ?>
             <div class="text-center py-5">
-                <i class="fas fa-gift fa-2x text-muted mb-3"></i>
+                <i class="fas fa-gift fa-2x text-muted mb-3" aria-hidden="true"></i>
                 <p class="text-muted">Saat ini belum ada promo aktif.</p>
                 <p class="text-muted">Cek kembali nanti — kami sering menghadirkan kejutan untuk pasangan LDR! 💞</p>
             </div>
@@ -113,23 +155,26 @@
             <div class="row g-4">
                 <?php foreach ($promos as $p): ?>
                     <div class="col-md-4">
-                        <div class="promo-card">
+                        <div class="promo-card" role="region" aria-labelledby="promo-title-<?= (int) $p['id'] ?>">
                             <div class="card-body">
-                                <h5 class="card-title fw-bold"><?= htmlspecialchars($p['name']) ?></h5>
+                                <h5 id="promo-title-<?= (int) $p['id'] ?>" class="card-title">
+                                    <?= htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8') ?>
+                                </h5>
 
-                                <div class="discount-badge">
-                                    Diskon <?= $p['discount'] ?>%
+                                <div class="discount-badge" aria-label="Diskon <?= (int) $p['discount'] ?> persen">
+                                    Diskon <?= (int) $p['discount'] ?>%
                                 </div>
 
                                 <p class="promo-description">
-                                    <?= htmlspecialchars($p['description']) ?>
+                                    <?= htmlspecialchars($p['description'], ENT_QUOTES, 'UTF-8') ?>
                                 </p>
 
-                                <div class="promo-period">
-                                    <i class="far fa-calendar-alt me-1"></i>
-                                    <?= date('d M Y', strtotime($p['start_date'])) ?>
-                                    <i class="fas fa-arrow-right mx-1"></i>
-                                    <?= date('d M Y', strtotime($p['end_date'])) ?>
+                                <div class="promo-period"
+                                    aria-label="Berlaku dari <?= htmlspecialchars(date('d M Y', strtotime($p['start_date'])), ENT_QUOTES, 'UTF-8') ?> hingga <?= htmlspecialchars(date('d M Y', strtotime($p['end_date'])), ENT_QUOTES, 'UTF-8') ?>">
+                                    <i class="far fa-calendar-alt" aria-hidden="true"></i>
+                                    <?= htmlspecialchars(date('d M Y', strtotime($p['start_date'])), ENT_QUOTES, 'UTF-8') ?>
+                                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                                    <?= htmlspecialchars(date('d M Y', strtotime($p['end_date'])), ENT_QUOTES, 'UTF-8') ?>
                                 </div>
                             </div>
                         </div>

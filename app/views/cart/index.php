@@ -65,50 +65,87 @@ $cart = $_SESSION['cart'] ?? [];
             color: var(--dark-grey);
         }
 
-        .btn-primary {
+        /* Custom Buttons — konsisten dengan desain Ruang Rasa */
+        .btn-primary-custom {
             background-color: var(--soft-blue);
             border: none;
+            border-radius: 12px;
+            padding: 0.65rem 1.25rem;
+            font-weight: 600;
+            color: white;
+            font-size: 1rem;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s, transform 0.2s;
         }
 
-        .btn-primary:hover {
+        .btn-primary-custom:hover:not(:disabled) {
             background-color: #658db2;
+            transform: translateY(-2px);
         }
 
-        .btn-secondary {
+        .btn-secondary-custom {
             background-color: #e0e0e0;
             color: var(--dark-grey);
             border: none;
+            border-radius: 12px;
+            padding: 0.65rem 1.25rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: background-color 0.2s;
         }
 
-        .btn-secondary:hover {
+        .btn-secondary-custom:hover {
             background-color: #d0d0d0;
         }
 
-        .btn-outline-secondary {
+        .btn-outline-custom {
             color: var(--soft-blue);
-            border-color: var(--soft-blue);
+            border: 1px solid var(--soft-blue);
+            background: transparent;
+            border-radius: 12px;
+            padding: 0.65rem 1.25rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: all 0.25s;
         }
 
-        .btn-outline-secondary:hover {
+        .btn-outline-custom:hover {
             background-color: var(--soft-blue);
             color: white;
         }
 
-        .btn-warning {
+        .btn-warning-custom {
             background-color: #fde047;
             color: #333;
             border: none;
+            border-radius: 10px;
+            padding: 0.4rem 0.8rem;
+            font-weight: 600;
+            font-size: 0.85rem;
         }
 
-        .btn-danger {
+        .btn-danger-custom {
             background-color: #fca5a5;
             color: #991b1b;
             border: none;
+            border-radius: 10px;
+            padding: 0.4rem 0.8rem;
+            font-weight: 600;
+            font-size: 0.85rem;
         }
 
         .form-control-sm {
             border-radius: 8px;
             padding: 0.35rem 0.5rem;
+            border: 1px solid #ddd;
+        }
+
+        .form-control-sm:focus {
+            border-color: var(--soft-blue);
+            box-shadow: 0 0 0 3px rgba(121, 161, 191, 0.1);
+            outline: none;
         }
 
         .personalization-detail {
@@ -119,18 +156,40 @@ $cart = $_SESSION['cart'] ?? [];
             margin-top: 0.5rem;
         }
 
+        /* 🔹 TOTAL SECTION — TANPA GRADIENT */
         .total-section {
-            background: linear-gradient(to right, var(--soft-blue), var(--soft-peach));
+            background-color: var(--soft-blue);
+            /* ✅ SOLID COLOR */
             color: white;
             padding: 1.25rem;
             border-radius: 16px;
             text-align: right;
+            min-width: 220px;
         }
 
         .total-section h5 {
             margin-bottom: 0.75rem;
             font-weight: 700;
             font-size: 1.4rem;
+        }
+
+        .checkout-btn {
+            display: inline-block;
+            background: white;
+            color: var(--soft-blue);
+            font-weight: 700;
+            padding: 0.7rem;
+            border-radius: 12px;
+            text-decoration: none;
+            width: 100%;
+            max-width: 200px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid white;
+        }
+
+        .checkout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .breadcrumb {
@@ -144,11 +203,12 @@ $cart = $_SESSION['cart'] ?? [];
             text-decoration: none;
         }
 
-        /* Responsif: tumpuk di mobile */
+        /* ——— Mobile Responsive ——— */
         @media (max-width: 768px) {
             .cart-actions {
                 flex-direction: column;
-                gap: 0.75rem;
+                gap: 1.25rem;
+                align-items: stretch;
             }
 
             .cart-table thead {
@@ -167,7 +227,7 @@ $cart = $_SESSION['cart'] ?? [];
             .cart-table tbody td {
                 display: flex;
                 justify-content: space-between;
-                padding: 0.4rem 0 !important;
+                padding: 0.5rem 0 !important;
                 border: none;
                 flex-wrap: wrap;
             }
@@ -176,19 +236,19 @@ $cart = $_SESSION['cart'] ?? [];
                 content: attr(data-label) ": ";
                 font-weight: 600;
                 color: var(--dark-grey);
-                flex: 0 0 110px;
+                flex: 0 0 100px;
             }
 
             .cart-table tbody td:last-child {
-                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
                 gap: 0.5rem;
-                justify-content: flex-start;
-                flex-wrap: wrap;
                 padding-top: 1rem !important;
             }
 
             .cart-table tbody td:last-child:before {
-                content: "Aksi: ";
+                content: "Aksi:";
+                margin-bottom: 0.25rem;
             }
 
             .qty-input {
@@ -212,11 +272,11 @@ $cart = $_SESSION['cart'] ?? [];
             </ol>
         </nav>
 
-        <h1 class="cart-header"><i class="fas fa-shopping-cart"></i> Keranjang Belanja</h1>
+        <h1 class="cart-header"><i class="fas fa-shopping-cart" aria-hidden="true"></i> Keranjang Belanja</h1>
 
         <?php if (!empty($_SESSION['success'])): ?>
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle me-2"></i><?= htmlspecialchars($_SESSION['success']);
+            <div class="alert alert-success" role="alert" aria-live="polite">
+                <i class="fas fa-check-circle me-2" aria-hidden="true"></i><?= htmlspecialchars($_SESSION['success'], ENT_QUOTES, 'UTF-8');
                 unset($_SESSION['success']); ?>
             </div>
         <?php endif; ?>
@@ -224,9 +284,9 @@ $cart = $_SESSION['cart'] ?? [];
         <?php if (empty($cart)): ?>
             <div class="text-center py-5"
                 style="background: white; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                <i class="fas fa-shopping-cart fa-2x text-muted mb-3"></i>
+                <i class="fas fa-shopping-cart fa-2x text-muted mb-3" aria-hidden="true"></i>
                 <p class="text-muted">Keranjangmu masih kosong.</p>
-                <a href="?page=products" class="btn btn-primary">Jelajahi Kado Spesial</a>
+                <a href="?page=products" class="btn-primary-custom">Jelajahi Kado Spesial</a>
             </div>
         <?php else: ?>
             <div class="cart-card">
@@ -234,12 +294,12 @@ $cart = $_SESSION['cart'] ?? [];
                     <table class="table cart-table align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th>Produk</th>
-                                <th>Harga</th>
-                                <th>Qty</th>
-                                <th>Subtotal</th>
-                                <th>Personalisasi</th>
-                                <th>Aksi</th>
+                                <th scope="col">Produk</th>
+                                <th scope="col">Harga</th>
+                                <th scope="col">Qty</th>
+                                <th scope="col">Subtotal</th>
+                                <th scope="col">Personalisasi</th>
+                                <th scope="col">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -253,37 +313,41 @@ $cart = $_SESSION['cart'] ?? [];
                                 ?>
                                 <tr>
                                     <td data-label="Produk">
-                                        <?= htmlspecialchars($item['name']) ?>
+                                        <?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?>
                                         <?php if (!empty($item['custom_text'])): ?>
-                                            <div class="small text-muted">Teks: <?= htmlspecialchars($item['custom_text']) ?></div>
+                                            <div class="small text-muted">Teks:
+                                                <?= htmlspecialchars($item['custom_text'], ENT_QUOTES, 'UTF-8') ?>
+                                            </div>
                                         <?php endif; ?>
                                     </td>
                                     <td data-label="Harga">Rp <?= number_format($price, 0, ',', '.') ?></td>
                                     <td data-label="Qty">
-                                        <input type="number" name="qty[<?= $index ?>]" value="<?= $qty ?>" min="1"
+                                        <input type="number" name="qty[<?= (int) $index ?>]" value="<?= (int) $qty ?>" min="1"
                                             class="form-control form-control-sm qty-input" style="width:80px;">
                                     </td>
                                     <td data-label="Subtotal">Rp <?= number_format($subtotal, 0, ',', '.') ?></td>
                                     <td data-label="Personalisasi">
                                         <?php if (empty($item['custom_id'])): ?>
-                                            <a href="?page=custom_form&cart_index=<?= $index ?>" class="btn btn-sm btn-warning">
-                                                <i class="fas fa-paint-brush me-1"></i> Personalisasi
+                                            <a href="?page=custom_form&cart_index=<?= (int) $index ?>" class="btn-warning-custom">
+                                                <i class="fas fa-paint-brush me-1" aria-hidden="true"></i> Personalisasi
                                             </a>
                                         <?php else: ?>
                                             <div class="personalization-detail small">
                                                 <b>Detail Personalisasi:</b><br>
-                                                Teks: <?= htmlspecialchars($item['custom_text'] ?? '-') ?><br>
-                                                Font: <?= htmlspecialchars($item['custom_font'] ?? '-') ?><br>
-                                                Warna: <?= htmlspecialchars($item['custom_color'] ?? '-') ?><br>
-                                                Packaging: <?= htmlspecialchars($item['custom_packaging'] ?? '-') ?><br>
-                                                Pita: <?= htmlspecialchars($item['custom_ribbon'] ?? '-') ?>
+                                                Teks: <?= htmlspecialchars($item['custom_text'] ?? '-', ENT_QUOTES, 'UTF-8') ?><br>
+                                                Font: <?= htmlspecialchars($item['custom_font'] ?? '-', ENT_QUOTES, 'UTF-8') ?><br>
+                                                Warna:
+                                                <?= htmlspecialchars($item['custom_color'] ?? '-', ENT_QUOTES, 'UTF-8') ?><br>
+                                                Packaging:
+                                                <?= htmlspecialchars($item['custom_packaging'] ?? '-', ENT_QUOTES, 'UTF-8') ?><br>
+                                                Pita: <?= htmlspecialchars($item['custom_ribbon'] ?? '-', ENT_QUOTES, 'UTF-8') ?>
                                             </div>
                                         <?php endif; ?>
                                     </td>
                                     <td data-label="Aksi">
-                                        <a href="?page=remove_from_cart&id=<?= $index ?>" class="btn btn-sm btn-danger"
-                                            onclick="return confirm('Yakin hapus <?= addslashes(htmlspecialchars($item['name'])) ?> dari keranjang?')">
-                                            <i class="fas fa-trash-alt"></i> Hapus
+                                        <a href="?page=remove_from_cart&id=<?= (int) $index ?>" class="btn-danger-custom"
+                                            onclick="return confirm('Yakin hapus <?= addslashes(htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8')) ?> dari keranjang?')">
+                                            <i class="fas fa-trash-alt" aria-hidden="true"></i> Hapus
                                         </a>
                                     </td>
                                 </tr>
@@ -293,17 +357,17 @@ $cart = $_SESSION['cart'] ?? [];
 
                     <div class="d-flex flex-wrap justify-content-between align-items-center cart-actions mt-4">
                         <div>
-                            <button type="submit" formaction="?page=cart_update" class="btn btn-secondary btn-sm">
-                                <i class="fas fa-sync me-1"></i> Update Jumlah
+                            <button type="submit" formaction="?page=cart_update" class="btn-secondary-custom">
+                                <i class="fas fa-sync me-1" aria-hidden="true"></i> Update Jumlah
                             </button>
-                            <a href="?page=products" class="btn btn-outline-secondary btn-sm ms-2">
-                                <i class="fas fa-plus me-1"></i> Tambah Kado
+                            <a href="?page=products" class="btn-outline-custom ms-2">
+                                <i class="fas fa-plus me-1" aria-hidden="true"></i> Tambah Kado
                             </a>
                         </div>
                         <div class="total-section">
                             <h5>Total: Rp <?= number_format($total, 0, ',', '.') ?></h5>
-                            <a href="?page=checkout" class="btn btn-light fw-bold" style="width: 100%; max-width: 200px;">
-                                Lanjut ke Checkout <i class="fas fa-arrow-right ms-1"></i>
+                            <a href="?page=checkout" class="checkout-btn">
+                                Lanjut ke Checkout <i class="fas fa-arrow-right ms-1" aria-hidden="true"></i>
                             </a>
                         </div>
                     </div>

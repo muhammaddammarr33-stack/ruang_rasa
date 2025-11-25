@@ -12,6 +12,7 @@ require_once __DIR__ . '/../app/controllers/CustomOrderController.php';
 require_once __DIR__ . '/../app/controllers/PromotionController.php';
 require_once __DIR__ . '/../app/controllers/ShippingController.php';
 require_once __DIR__ . '/../app/controllers/MembershipController.php';
+require_once __DIR__ . '/../app/helpers/ChatHelper.php';
 // require_once __DIR__ . '/../app/controllers/ReferralController.php';
 // require_once __DIR__ . '/../app/controllers/NewsletterController.php';
 session_start();

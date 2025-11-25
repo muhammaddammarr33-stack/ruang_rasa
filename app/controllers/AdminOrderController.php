@@ -2,11 +2,13 @@
 // app/controllers/AdminOrderController.php
 require_once __DIR__ . '/../models/Order.php';
 require_once __DIR__ . '/../models/OrderLog.php';
+require_once __DIR__ . '/../models/Shipping.php';
 
 class AdminOrderController
 {
     private $orderModel;
     private $logModel;
+    private $shippingModel; // <-- tambahkan ini
 
     public function __construct()
     {
@@ -20,6 +22,7 @@ class AdminOrderController
 
         $this->orderModel = new Order();
         $this->logModel = new OrderLog();
+        $this->shippingModel = new Shipping(); // <-- inisialisasi
     }
 
     // List orders with filters
@@ -61,6 +64,7 @@ class AdminOrderController
         $items = $this->orderModel->getItems($id);
         $payment = $this->orderModel->getPayment($id);
         $logs = $this->logModel->allByOrder($id);
+        $shipping = $this->shippingModel->getByOrderId($id); // ✅ gunakan Shipping model
 
         include __DIR__ . '/../views/admin/orders/detail.php';
     }

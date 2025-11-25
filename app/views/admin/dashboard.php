@@ -2,9 +2,6 @@
 if (session_status() === PHP_SESSION_NONE)
     session_start();
 
-// expected variables from controller:
-// $metrics (array), $salesChart (assoc date=>metrics), $topProducts, $topCategories, $recentOrders
-
 $metrics = $metrics ?? [
     'revenue' => 0,
     'orders' => 0,
@@ -27,170 +24,314 @@ $recentOrders = $recentOrders ?? [];
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Admin Dashboard — Ruang Rasa</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --accent: #4B9CE2;
-            --muted: #6c757d
+            --accent: #7093B3;
+            --accent-hover: #5d7da0;
+            --sidebar-bg: #444B4F;
+            --sidebar-text: #ecf0f1;
+            --muted: #6c757d;
+            --card-bg: #fff;
+            --border-color: #e9ecef;
         }
 
         body {
-            font-family: Poppins, system-ui, Arial;
-            background: #f6f8fb
+            font-family: 'Poppins', system-ui, Arial, sans-serif;
+            background: #FFFFFF;
+            overflow-x: hidden;
+            font-size: 0.875rem;
         }
 
-        .card-rounded {
-            border-radius: 12px;
-            box-shadow: 0 6px 18px rgba(20, 33, 61, 0.06)
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            background: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            padding-top: 12px;
+        }
+
+        #sidebar.collapsed {
+            width: 70px;
+        }
+
+        #sidebar .nav-link {
+            color: #bdc3c7;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            border-radius: 0;
+        }
+
+        #sidebar .nav-link:hover,
+        #sidebar .nav-link.active {
+            color: #fff;
+            background: var(--accent);
+        }
+
+        #sidebar .nav-icon {
+            width: 22px;
+            text-align: center;
+            margin-right: 10px;
+            font-size: 0.95rem;
+        }
+
+        #sidebar.collapsed .nav-text {
+            display: none;
+        }
+
+        #main-content {
+            margin-left: 250px;
+            transition: margin-left 0.3s ease;
+            padding: 12px;
+        }
+
+        #main-content.sidebar-collapsed {
+            margin-left: 70px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: none;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .kpi .value {
+            font-weight: 600;
+            font-size: 1.25rem;
         }
 
         .small-muted {
             color: var(--muted);
-            font-size: .9rem
+            font-size: 0.8125rem;
         }
 
-        .kpi .value {
-            font-weight: 700;
-            font-size: 1.4rem
+        .range-btn {
+            padding: 4px 8px;
+            font-size: 0.8125rem;
         }
 
         .range-btn.active {
             background: var(--accent);
-            color: #fff
+            color: white;
+            border-color: var(--accent);
         }
 
         .feed-item {
-            border-left: 3px solid rgba(75, 156, 226, 0.12);
-            padding: 8px 12px;
+            border-left: 2px solid var(--accent);
+            padding: 6px 10px;
+            margin-bottom: 6px;
+            background: #fafafa;
+            border-radius: 0 3px 3px 0;
+            font-size: 0.8125rem;
+        }
+
+        .chart-container {
+            height: 170px;
+            width: 100%;
+        }
+
+        .trend-chart-container {
+            height: 180px;
+        }
+
+        h6 {
+            font-weight: 600;
+            font-size: 0.95rem;
             margin-bottom: 8px;
-            background: #fff
+        }
+
+        #sidebarToggle {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 4px 8px;
+            font-size: 0.9rem;
+        }
+
+        /* Perbaikan layout: atur lebar input agar sejajar */
+        .date-range-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .date-range-group input[type="date"] {
+            width: auto;
+            padding: 4px 8px;
+            font-size: 0.875rem;
+        }
+
+        .date-range-group button {
+            padding: 4px 8px;
+            font-size: 0.875rem;
+        }
+
+        /* Atur tinggi card agar seragam */
+        .card-height {
+            min-height: 100%;
+        }
+
+        /* Scrollbar halus */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 3px;
         }
     </style>
 </head>
 
 <body>
-    <div class="container-fluid p-4">
 
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="mb-0">Dashboard — Ruang Rasa</h3>
-            <div>
-                <div class="d-flex align-items-center">
-                    <div class="me-2">
-                        <button class="btn btn-outline-secondary btn-sm range-btn" data-range="today">Hari ini</button>
-                        <button class="btn btn-outline-secondary btn-sm range-btn"
-                            data-range="yesterday">Kemarin</button>
-                        <button class="btn btn-outline-secondary btn-sm range-btn active" data-range="7d">7
-                            Hari</button>
-                        <button class="btn btn-outline-secondary btn-sm range-btn" data-range="30d">30 Hari</button>
-                    </div>
-                    <div class="me-2">
-                        <input type="date" id="startDate"> - <input type="date" id="endDate">
-                        <button id="applyRange" class="btn btn-sm btn-primary">Terapkan</button>
-                    </div>
-                    <div class="form-check form-switch ms-3">
-                        <input class="form-check-input" type="checkbox" id="compareToggle">
-                        <label class="form-check-label small-muted" for="compareToggle">Bandingkan periode
-                            sebelumnya</label>
-                    </div>
+    <!-- Sidebar -->
+    <nav id="sidebar" class="d-flex flex-column">
+        <div class="px-3 mb-2">
+            <h6 class="text-white mb-0 nav-text">Ruang Rasa</h6>
+        </div>
+        <ul class="nav nav-pills flex-column px-2">
+            <li class="nav-item">
+                <a class="nav-link active" href="?page=admin_dashboard">
+                    <i class="bi bi-house nav-icon"></i>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="?page=admin_categories">
+                    <i class="bi bi-grid nav-icon"></i>
+                    <span class="nav-text">Kategori</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="?page=admin_products">
+                    <i class="bi bi-box nav-icon"></i>
+                    <span class="nav-text">Produk</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="?page=admin_orders">
+                    <i class="bi bi-cart nav-icon"></i>
+                    <span class="nav-text">Pesanan</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="?page=admin_consultations">
+                    <i class="bi bi-chat-dots nav-icon"></i>
+                    <span class="nav-text">Konsultasi</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="?page=admin_promotions">
+                    <i class="bi bi-percent nav-icon"></i>
+                    <span class="nav-text">Promosi</span>
+                </a>
+            </li>
+            <li class="nav-item mt-auto">
+                <a class="nav-link" href="?page=settings">
+                    <i class="bi bi-gear nav-icon"></i>
+                    <span class="nav-text">Pengaturan</span>
+                </a>
+            </li>
+            <li class="nav-item mt-auto">
+                <a class="nav-link" href="?page=logout">
+                    <i class="bi bi-box-arrow-right nav-icon"></i>
+                    <span class="nav-text">Keluar</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div id="main-content">
+        <button id="sidebarToggle" class="btn btn-sm mb-2">
+            <i class="bi bi-list"></i>
+        </button>
+
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="mb-0 fw-semibold">Dashboard — Ruang Rasa</h5>
+            <div class="d-flex align-items-center flex-wrap gap-2">
+                <div class="d-flex gap-1">
+                    <button class="btn btn-outline-secondary btn-sm range-btn" data-range="today">Hari ini</button>
+                    <button class="btn btn-outline-secondary btn-sm range-btn" data-range="yesterday">Kemarin</button>
+                    <button class="btn btn-outline-secondary btn-sm range-btn active" data-range="7d">7 Hari</button>
+                    <button class="btn btn-outline-secondary btn-sm range-btn" data-range="30d">30 Hari</button>
+                </div>
+                <div class="date-range-group">
+                    <input type="date" id="startDate" class="form-control form-control-sm">
+                    <span>-</span>
+                    <input type="date" id="endDate" class="form-control form-control-sm">
+                    <button id="applyRange" class="btn btn-sm btn-primary">Terapkan</button>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="compareToggle" style="height:16px;width:28px;">
+                    <label class="form-check-label small-muted" for="compareToggle"
+                        style="font-size:0.8125rem;">Bandingkan</label>
                 </div>
             </div>
         </div>
 
         <!-- KPI Cards -->
-        <div class="row g-3 mb-3">
-            <div class="col-md-3">
-                <div class="p-3 bg-white card-rounded kpi">
-                    <div class="small-muted">Total Pendapatan</div>
-                    <div class="value" id="kpiRevenue">Rp <?= number_format($metrics['revenue'], 0, ',', '.') ?></div>
-                    <div class="small-muted">Periode sebelumnya: <span
-                            id="kpiRevenuePrev"><?= number_format($metrics['compare']['revenue_prev'] ?? 0, 0, ',', '.') ?></span>
+        <div class="row g-2 mb-2">
+            <?php foreach ([
+                ['label' => 'Total Pendapatan', 'value' => 'Rp ' . number_format($metrics['revenue'], 0, ',', '.'), 'prev' => 'Rp ' . number_format($metrics['compare']['revenue_prev'] ?? 0, 0, ',', '.')],
+                ['label' => 'Pesanan', 'value' => number_format($metrics['orders'], 0, ',', '.'), 'prev' => number_format($metrics['compare']['orders_prev'] ?? 0, 0, ',', '.')],
+                ['label' => 'AOV', 'value' => 'Rp ' . number_format($metrics['aov'], 0, ',', '.'), 'prev' => 'Rp ' . number_format($metrics['compare']['aov_prev'] ?? 0, 0, ',', '.')],
+                ['label' => 'Produk Terjual', 'value' => number_format($metrics['items'], 0, ',', '.'), 'prev' => number_format($metrics['compare']['items_prev'] ?? 0, 0, ',', '.')]
+            ] as $kpi): ?>
+                <div class="col-6 col-md-3">
+                    <div class="card kpi">
+                        <div class="small-muted"><?= $kpi['label'] ?></div>
+                        <div class="value"><?= $kpi['value'] ?></div>
+                        <div class="small-muted">Prev: <?= $kpi['prev'] ?></div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <div class="p-3 bg-white card-rounded kpi">
-                    <div class="small-muted">Pesanan</div>
-                    <div class="value" id="kpiOrders"><?= number_format($metrics['orders'], 0, ',', '.') ?></div>
-                    <div class="small-muted">Prev: <span
-                            id="kpiOrdersPrev"><?= number_format($metrics['compare']['orders_prev'] ?? 0, 0, ',', '.') ?></span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="p-3 bg-white card-rounded kpi">
-                    <div class="small-muted">AOV</div>
-                    <div class="value" id="kpiAOV">Rp <?= number_format($metrics['aov'], 0, ',', '.') ?></div>
-                    <div class="small-muted">Prev: <span
-                            id="kpiAOVPrev"><?= number_format($metrics['compare']['aov_prev'] ?? 0, 0, ',', '.') ?></span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="p-3 bg-white card-rounded kpi">
-                    <div class="small-muted">Produk Terjual</div>
-                    <div class="value" id="kpiItems"><?= number_format($metrics['items'], 0, ',', '.') ?></div>
-                    <div class="small-muted">Prev: <span
-                            id="kpiItemsPrev"><?= number_format($metrics['compare']['items_prev'] ?? 0, 0, ',', '.') ?></span>
-                    </div>
-                </div>
-            </div>
+            <?php endforeach; ?>
         </div>
 
-        <div class="row g-3">
-            <!-- LEFT: Charts & Top products -->
+        <div class="row g-2">
+            <!-- LEFT -->
             <div class="col-lg-8">
-
-                <div class="bg-white p-3 card-rounded mb-3">
+                <div class="card">
                     <h6>Revenue & Orders (Trend)</h6>
-                    <canvas id="trendChart" height="120"></canvas>
+                    <div class="chart-container trend-chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
                 </div>
 
-                <div class="bg-white p-3 card-rounded mb-3">
+                <div class="card">
                     <h6>Top Products</h6>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Produk</th>
-                                <th>Qty</th>
-                                <th>Pendapatan</th>
-                            </tr>
-                        </thead>
-                        <tbody id="topProductsBody">
-                            <?php if (!empty($topProducts)):
-                                foreach ($topProducts as $p): ?>
-                                    <tr>
-                                        <td><?= htmlspecialchars($p['name']) ?></td>
-                                        <td><?= (int) $p['qty_sold'] ?></td>
-                                        <td>Rp <?= number_format($p['revenue'], 0, ',', '.') ?></td>
-                                    </tr>
-                                <?php endforeach; else: ?>
-                                <tr>
-                                    <td colspan="3" class="text-center text-muted">Belum ada data</td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
+                    <div class="chart-container">
+                        <canvas id="topProductsChart"></canvas>
+                    </div>
                 </div>
 
+                <div class="card">
+                    <h6>Kategori Terlaris</h6>
+                    <div class="chart-container">
+                        <canvas id="topCategoriesChart"></canvas>
+                    </div>
+                </div>
             </div>
 
-            <!-- RIGHT: categories, recent orders, activity -->
+            <!-- RIGHT -->
             <div class="col-lg-4">
-                <div class="bg-white p-3 card-rounded mb-3">
-                    <h6>Kategori Terlaris</h6>
-                    <ul id="catList" class="list-unstyled mb-0">
-                        <?php if (!empty($topCategories)):
-                            foreach ($topCategories as $c): ?>
-                                <li class="mb-2"><?= htmlspecialchars($c['category']) ?> — <?= (int) $c['qty_sold'] ?></li>
-                            <?php endforeach; else: ?>
-                            <li class="text-muted">Belum ada data</li>
-                        <?php endif; ?>
-                    </ul>
-                </div>
-
-                <div class="bg-white p-3 card-rounded mb-3">
+                <div class="card">
                     <h6>Pesanan Terbaru</h6>
-                    <div style="max-height:220px;overflow:auto">
+                    <div style="max-height:250px; overflow-y:auto;">
                         <ul id="recentOrdersList" class="list-unstyled mb-0">
                             <?php if (!empty($recentOrders)):
                                 foreach ($recentOrders as $o): ?>
@@ -198,57 +339,171 @@ $recentOrders = $recentOrders ?? [];
                                         <div><strong>#<?= $o['id'] ?></strong>
                                             <?= htmlspecialchars($o['user_name'] ?? 'Guest') ?></div>
                                         <div class="small-muted">Rp <?= number_format($o['total_amount'], 0, ',', '.') ?> —
-                                            <?= $o['created_at'] ?></div>
+                                            <?= $o['created_at'] ?>
+                                        </div>
                                     </li>
                                 <?php endforeach; else: ?>
-                                <li class="text-muted">Belum ada pesanan</li>
+                                <li class="text-muted small">Belum ada pesanan</li>
                             <?php endif; ?>
                         </ul>
                     </div>
                 </div>
 
-                <div class="bg-white p-3 card-rounded mb-3">
+                <div class="card">
                     <h6>Activity Feed</h6>
-                    <div id="activityFeed" style="max-height:220px;overflow:auto"></div>
+                    <div id="activityFeed" style="max-height:200px; overflow-y:auto;"></div>
                 </div>
             </div>
         </div>
-
     </div>
 
     <script>
-        /* ---------- helper ---------- */
-        function formatRp(n) { return 'Rp ' + Number(n).toLocaleString('id-ID'); }
+        // Toggle sidebar
+        document.getElementById('sidebarToggle').addEventListener('click', () => {
+            const sidebar = document.getElementById('sidebar');
+            const main = document.getElementById('main-content');
+            sidebar.classList.toggle('collapsed');
+            main.classList.toggle('sidebar-collapsed');
+        });
+
+        /* ---------- helpers ---------- */
+        function formatRp(n) {
+            if (isNaN(n)) return 'Rp 0';
+            return 'Rp ' + Number(n).toLocaleString('id-ID');
+        }
         function q(sel) { return document.querySelector(sel); }
         function qAll(sel) { return document.querySelectorAll(sel); }
 
         /* ---------- initial data from PHP ---------- */
-        let labels = <?= json_encode(array_keys($salesChart)) ?>;
-        let initialRevenue = <?= json_encode(array_map(function ($v) {
-            return $v['revenue']; }, $salesChart)) ?>;
-        let initialOrders = <?= json_encode(array_map(function ($v) {
-            return $v['orders']; }, $salesChart)) ?>;
+        const labels = <?= json_encode(array_keys($salesChart)) ?>;
+        const initialRevenue = <?= json_encode(array_map(fn($v) => (float) ($v['revenue'] ?? 0), $salesChart)) ?>;
+        const initialOrders = <?= json_encode(array_map(fn($v) => (int) ($v['orders'] ?? 0), $salesChart)) ?>;
+        const topProducts = <?= json_encode($topProducts) ?>;
+        const topCategories = <?= json_encode($topCategories) ?>;
 
-        /* ---------- Chart setup (dual axis) ---------- */
-        const ctx = document.getElementById('trendChart').getContext('2d');
-        let trendChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    { type: 'line', label: 'Revenue', data: initialRevenue, yAxisID: 'y', borderColor: '#4B9CE2', backgroundColor: 'rgba(75,156,226,0.15)', tension: 0.3 },
-                    { type: 'bar', label: 'Orders', data: initialOrders, yAxisID: 'y1', backgroundColor: 'rgba(75,156,226,0.35)' }
-                ]
-            },
-            options: {
-                scales: {
-                    y: { beginAtZero: true, position: 'left', ticks: { callback: v => formatRp(v) } },
-                    y1: { beginAtZero: true, position: 'right', grid: { display: false } }
+        /* ---------- Chart: Trend ---------- */
+        let trendChart = null; // ✅ deklarasi di luar
+
+        const ctxTrend = q('#trendChart');
+        if (ctxTrend) {
+            const trendCtx = ctxTrend.getContext('2d');
+            trendChart = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Revenue',
+                            data: initialRevenue,
+                            yAxisID: 'y',
+                            borderColor: '#7093B3',
+                            backgroundColor: 'rgba(112,147,179,0.15)',
+                            tension: 0.3,
+                            fill: true,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Orders',
+                            data: initialOrders,
+                            yAxisID: 'y1',
+                            type: 'bar',
+                            backgroundColor: 'rgba(112,147,179,0.35)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                font: { size: 10 }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            position: 'left',
+                            ticks: {
+                                callback: v => formatRp(v)
+                            }
+                        },
+                        y1: {
+                            beginAtZero: true,
+                            position: 'right',
+                            grid: { display: false }
+                        }
+                    }
                 }
-            }
-        });
+            });
+        }
 
-        /* ---------- Date range controls ---------- */
+        /* ---------- Chart: Top Products ---------- */
+        const ctxProd = q('#topProductsChart');
+        if (ctxProd && topProducts.length > 0) {
+            const productNames = topProducts.map(p => (p.name || '').length > 20 ? (p.name || '').substring(0, 20) + '…' : (p.name || ''));
+            const productQty = topProducts.map(p => (p.qty_sold ?? 0));
+            const prodCtx = ctxProd.getContext('2d');
+            new Chart(prodCtx, {
+                type: 'bar',
+                data: {
+                    labels: productNames,
+                    datasets: [{
+                        label: 'Jumlah Terjual',
+                        data: productQty,
+                        backgroundColor: '#7093B3'
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: { font: { size: 9 } }
+                        }
+                    },
+                    layout: { padding: { left: 0, right: 10 } }
+                }
+            });
+        }
+
+        /* ---------- Chart: Top Categories ---------- */
+        const ctxCat = q('#topCategoriesChart');
+        if (ctxCat && topCategories.length > 0) {
+            const catNames = topCategories.map(c => (c.category || '').length > 20 ? (c.category || '').substring(0, 20) + '…' : (c.category || ''));
+            const catQty = topCategories.map(c => (c.qty_sold ?? 0));
+            const catCtx = ctxCat.getContext('2d');
+            new Chart(catCtx, {
+                type: 'bar',
+                data: {
+                    labels: catNames,
+                    datasets: [{
+                        label: 'Jumlah Terjual',
+                        data: catQty,
+                        backgroundColor: '#7093B3'
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: { font: { size: 9 } }
+                        }
+                    },
+                    layout: { padding: { left: 0, right: 10 } }
+                }
+            });
+        }
+
+        /* ---------- Date range ---------- */
         function parseRangePreset(preset) {
             const today = new Date();
             let start, end;
@@ -261,7 +516,7 @@ $recentOrders = $recentOrders ?? [];
         function toYMD(d) { return d.toISOString().slice(0, 10); }
 
         qAll('.range-btn').forEach(b => {
-            b.addEventListener('click', e => {
+            b.addEventListener('click', () => {
                 qAll('.range-btn').forEach(x => x.classList.remove('active'));
                 b.classList.add('active');
                 const p = parseRangePreset(b.dataset.range);
@@ -271,12 +526,15 @@ $recentOrders = $recentOrders ?? [];
             });
         });
 
-        // apply initial 7d
-        if (!q('#startDate').value) { let p = parseRangePreset('7d'); q('#startDate').value = toYMD(p.start); q('#endDate').value = toYMD(p.end); }
+        if (!q('#startDate').value) {
+            const p = parseRangePreset('7d');
+            q('#startDate').value = toYMD(p.start);
+            q('#endDate').value = toYMD(p.end);
+        }
 
         q('#applyRange').addEventListener('click', fetchData);
 
-        /* ---------- fetchData (AJAX to admin_dashboard_data) ---------- */
+        /* ---------- Fetch Data AJAX ---------- */
         function fetchData() {
             const start = q('#startDate').value;
             const end = q('#endDate').value;
@@ -287,65 +545,56 @@ $recentOrders = $recentOrders ?? [];
                 .then(j => {
                     if (j.error) return alert(j.error);
 
-                    // update KPI
-                    q('#kpiRevenue').textContent = formatRp(j.metrics.revenue);
-                    q('#kpiOrders').textContent = j.metrics.orders.toLocaleString();
-                    q('#kpiAOV').textContent = formatRp(Math.round(j.metrics.aov));
-                    q('#kpiItems').textContent = j.metrics.items.toLocaleString();
-
-                    q('#kpiRevenuePrev').textContent = formatRp(j.metrics.compare.revenue_prev);
-                    q('#kpiOrdersPrev').textContent = j.metrics.compare.orders_prev.toLocaleString();
-                    q('#kpiAOVPrev').textContent = formatRp(Math.round(j.metrics.compare.aov_prev));
-                    q('#kpiItemsPrev').textContent = j.metrics.compare.items_prev.toLocaleString();
-
-                    // update charts
-                    trendChart.data.labels = j.labels;
-                    trendChart.data.datasets[0].data = j.revenue;
-                    trendChart.data.datasets[1].data = j.orders;
-                    trendChart.update();
-
-                    // top products
-                    const tpBody = q('#topProductsBody'); tpBody.innerHTML = '';
-                    if (j.topProducts && j.topProducts.length) {
-                        j.topProducts.forEach(p => {
-                            tpBody.insertAdjacentHTML('beforeend', `<tr><td>${p.name}</td><td>${p.qty_sold}</td><td>${formatRp(p.revenue)}</td></tr>`);
-                        });
-                    } else {
-                        tpBody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Belum ada data</td></tr>';
+                    // Update Trend Chart
+                    if (trendChart) {
+                        trendChart.data.labels = j.labels || [];
+                        trendChart.data.datasets[0].data = j.revenue || [];
+                        trendChart.data.datasets[1].data = j.orders || [];
+                        trendChart.update();
                     }
 
-                    // categories
-                    const catList = q('#catList'); catList.innerHTML = '';
-                    if (j.topCategories && j.topCategories.length) {
-                        j.topCategories.forEach(c => { catList.insertAdjacentHTML('beforeend', `<li class="mb-2">${c.category} — ${c.qty_sold}</li>`); });
-                    } else catList.innerHTML = '<li class="text-muted">Belum ada data</li>';
-
-                    // recent orders
-                    const recentList = q('#recentOrdersList'); recentList.innerHTML = '';
-                    if (j.recentOrders && j.recentOrders.length) {
-                        j.recentOrders.forEach(o => {
-                            recentList.insertAdjacentHTML('beforeend', `<li class="mb-2"><div><strong>#${o.id}</strong> ${o.user_name || 'Guest'}</div><div class="small-muted">${formatRp(o.total_amount)} — ${o.created_at}</div></li>`);
-                        });
-                    } else recentList.innerHTML = '<li class="text-muted">Belum ada pesanan</li>';
+                    // Update Recent Orders List
+                    const roList = q('#recentOrdersList');
+                    if (roList) {
+                        roList.innerHTML = '';
+                        if (j.recentOrders?.length) {
+                            j.recentOrders.forEach(o => {
+                                roList.insertAdjacentHTML('beforeend',
+                                    `<li class="mb-2"><div><strong>#${o.id}</strong> ${o.user_name || 'Guest'}</div>
+                                <div class="small-muted">${formatRp(o.total_amount)} — ${o.created_at}</div></li>`
+                                );
+                            });
+                        } else {
+                            roList.innerHTML = '<li class="text-muted small">Belum ada pesanan</li>';
+                        }
+                    }
                 })
-                .catch(err => { console.error(err); alert('Gagal mengambil data'); });
+                .catch(err => {
+                    console.error(err);
+                    alert('Gagal memuat data.');
+                });
         }
 
-        /* ---------- Activity feed (poll every 10s) ---------- */
+        /* ---------- Activity Feed ---------- */
         function loadActivity() {
             fetch('?page=admin_activity')
                 .then(r => r.json())
                 .then(list => {
-                    const el = q('#activityFeed'); el.innerHTML = '';
-                    list.forEach(item => {
-                        el.insertAdjacentHTML('beforeend', `<div class="feed-item"><div>${item.text}</div><div class="small-muted">${item.time}</div></div>`);
-                    });
-                });
+                    const el = q('#activityFeed');
+                    if (el) {
+                        el.innerHTML = '';
+                        (list || []).forEach(item => {
+                            el.insertAdjacentHTML('beforeend',
+                                `<div class="feed-item"><div>${item.text}</div><div class="small-muted">${item.time}</div></div>`
+                            );
+                        });
+                    }
+                })
+                .catch(err => console.error('Gagal memuat activity feed:', err));
         }
         setInterval(loadActivity, 10000);
         loadActivity();
     </script>
-
 </body>
 
 </html>

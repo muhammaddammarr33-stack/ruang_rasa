@@ -28,12 +28,13 @@
             background-color: var(--off-white);
             font-family: 'Poppins', sans-serif;
             color: var(--dark-grey);
+            padding: 1.5rem 0;
         }
 
         .section-title {
             font-weight: 700;
             font-size: 1.8rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
             color: var(--dark-grey);
         }
 
@@ -44,6 +45,9 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
             transition: transform 0.3s, box-shadow 0.3s;
             background: white;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
 
         .product-card:hover {
@@ -54,48 +58,138 @@
         .card-img-top {
             height: 200px;
             object-fit: cover;
+            width: 100%;
+        }
+
+        .card-body {
+            padding: 1.25rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         .card-title {
             font-weight: 600;
-            font-size: 1.05rem;
+            font-size: 1.1rem;
             color: var(--dark-grey);
+            margin-bottom: 0.5rem;
         }
 
-        .price {
-            color: var(--soft-blue);
+        .category-badge {
+            font-size: 0.85rem;
+            color: #777;
+            margin-bottom: 0.75rem;
+        }
+
+        .price-original {
+            text-decoration: line-through;
+            color: #888;
+            font-size: 0.95rem;
+        }
+
+        .discount-badge {
+            background-color: #e74c3c;
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            margin-left: 0.4rem;
+            vertical-align: middle;
+        }
+
+        .price-final {
+            font-size: 1.25rem;
             font-weight: 700;
-            font-size: 1.15rem;
+            color: var(--soft-blue);
+            margin: 0.5rem 0;
         }
 
-        .btn-primary {
+        .btn-add {
             background-color: var(--soft-blue);
+            color: white;
             border: none;
+            border-radius: 10px;
+            padding: 0.6rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            width: 100%;
+            transition: background-color 0.2s;
         }
 
-        .btn-primary:hover {
+        .btn-add:hover:not(:disabled) {
             background-color: #658db2;
         }
 
-        .btn-outline-primary {
+        .btn-detail {
+            background-color: #f8f9fa;
             color: var(--soft-blue);
-            border-color: var(--soft-blue);
+            border: 1px solid var(--soft-blue);
+            border-radius: 10px;
+            padding: 0.6rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            width: 100%;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s;
         }
 
-        .btn-outline-primary:hover {
+        .btn-detail:hover {
             background-color: var(--soft-blue);
             color: white;
+        }
+
+        .btn-back-home {
+            background-color: #f0f0f0;
+            color: var(--dark-grey);
+            border: none;
+            border-radius: 12px;
+            padding: 0.7rem 1.25rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.2s;
+        }
+
+        .btn-back-home:hover {
+            background-color: #e0e0e0;
+        }
+
+        /* Search Form */
+        .search-container {
+            background: white;
+            padding: 1.25rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2.5rem;
         }
 
         .search-form .form-control,
         .search-form .form-select {
             border-radius: 12px;
             padding: 0.65rem 1rem;
+            border: 1px solid #ddd;
         }
 
-        .search-form .btn {
+        .search-form .form-control:focus,
+        .search-form .form-select:focus {
+            border-color: var(--soft-blue);
+            box-shadow: 0 0 0 3px rgba(121, 161, 191, 0.15);
+            outline: none;
+        }
+
+        .search-form .btn-search {
+            background-color: var(--soft-blue);
+            color: white;
+            border: none;
             border-radius: 12px;
-            padding: 0.65rem 1.2rem;
+            padding: 0.65rem 1.25rem;
+            font-weight: 600;
+        }
+
+        .search-form .btn-search:hover {
+            background-color: #658db2;
         }
 
         @media (max-width: 768px) {
@@ -104,68 +198,83 @@
                 gap: 0.75rem;
             }
 
-            .search-form .btn {
-                align-self: stretch;
+            .search-form .btn-search {
+                width: 100%;
+            }
+
+            .section-title {
+                text-align: center;
+                margin-bottom: 1.5rem;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="container py-5">
-        <!-- 🔹 Judul & Pencarian -->
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5">
-            <h2 class="section-title">Semua Kado Spesial</h2>
+    <div class="container py-4">
+        <!-- Judul -->
+        <h2 class="section-title text-center text-md-start">Semua Kado Spesial</h2>
 
-            <form class="d-flex search-form flex-wrap gap-2" method="get" action="">
+        <!-- Pencarian -->
+        <div class="search-container">
+            <form class="d-flex flex-wrap gap-2" method="get" action="">
                 <input type="hidden" name="page" value="products">
                 <input type="text" name="search" class="form-control" placeholder="Cari kado atau pesan..."
-                    value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
-                <select name="category" class="form-select">
+                    value="<?= htmlspecialchars($_GET['search'] ?? '', ENT_QUOTES, 'UTF-8') ?>" aria-label="Cari kado">
+                <select name="category" class="form-select" aria-label="Pilih kategori">
                     <option value="">Semua Kategori</option>
                     <?php foreach ($categories as $cat): ?>
-                        <option value="<?= $cat['id'] ?>" <?= (($_GET['category'] ?? '') == $cat['id']) ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($cat['name']) ?>
+                        <option value="<?= (int) $cat['id'] ?>" <?= (($_GET['category'] ?? '') == $cat['id']) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($cat['name'], ENT_QUOTES, 'UTF-8') ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-search"></i> Cari
+                <button type="submit" class="btn-search" aria-label="Cari kado">
+                    <i class="fas fa-search" aria-hidden="true"></i> Cari
                 </button>
             </form>
         </div>
 
-        <!-- 🔹 Daftar Produk -->
+        <!-- Produk -->
         <?php if (!empty($products)): ?>
             <div class="row g-4">
                 <?php foreach ($products as $p): ?>
                     <div class="col-md-3 col-sm-6">
-                        <div class="card product-card h-100">
-                            <img src="uploads/<?= htmlspecialchars($p['image'] ?? 'noimage.png') ?>" class="card-img-top"
-                                alt="<?= htmlspecialchars($p['name']) ?>">
-                            <div class="card-body d-flex flex-column">
-                                <h6 class="card-title"><?= htmlspecialchars($p['name']) ?></h6>
-                                <p class="text-muted small mb-2"><?= htmlspecialchars($p['category_name'] ?? '-') ?></p>
-                                <p class="price mb-3">
+                        <div class="product-card">
+                            <img src="uploads/<?= htmlspecialchars($p['image'] ?? 'noimage.png', ENT_QUOTES, 'UTF-8') ?>"
+                                class="card-img-top" alt="<?= htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8') ?>"
+                                onerror="this.src='https://via.placeholder.com/300x200?text=Gambar+Tidak+Tersedia'">
+                            <div class="card-body">
+                                <h6 class="card-title"><?= htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8') ?></h6>
+                                <p class="category-badge">
+                                    <?= htmlspecialchars($p['category_name'] ?? '-', ENT_QUOTES, 'UTF-8') ?></p>
+
+                                <div class="mb-2">
                                     <?php if (!empty($p['discount_percent']) && $p['discount_percent'] > 0): ?>
-                                        <span class="text-muted text-decoration-line-through">
+                                        <div class="price-original">
                                             Rp <?= number_format($p['base_price'], 0, ',', '.') ?>
-                                        </span>
-                                        <span class="badge bg-danger ms-1">Diskon <?= $p['discount_percent'] ?>%</span><br>
-                                        <strong>Rp <?= number_format($p['final_price'], 0, ',', '.') ?></strong>
+                                        </div>
+                                        <span class="discount-badge">Diskon <?= (int) $p['discount_percent'] ?>%</span>
+                                        <div class="price-final">
+                                            Rp <?= number_format($p['final_price'], 0, ',', '.') ?>
+                                        </div>
                                     <?php else: ?>
-                                        <strong>Rp <?= number_format($p['final_price'], 0, ',', '.') ?></strong>
+                                        <div class="price-final">
+                                            Rp <?= number_format($p['final_price'], 0, ',', '.') ?>
+                                        </div>
                                     <?php endif; ?>
-                                </p>
+                                </div>
+
                                 <div class="mt-auto">
-                                    <a href="?page=product_detail&id=<?= $p['id'] ?>"
-                                        class="btn btn-outline-primary btn-sm w-100 mb-2">
-                                        <i class="fas fa-eye"></i> Detail
+                                    <a href="?page=product_detail&id=<?= (int) $p['id'] ?>" class="btn-detail"
+                                        aria-label="Lihat detail <?= htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8') ?>">
+                                        <i class="fas fa-eye" aria-hidden="true"></i> Detail
                                     </a>
                                     <form method="post" action="?page=add_to_cart" class="mt-1">
-                                        <input type="hidden" name="id" value="<?= $p['id'] ?>">
-                                        <button type="submit" class="btn btn-primary btn-sm w-100">
-                                            <i class="fas fa-cart-plus"></i> Tambah ke Keranjang
+                                        <input type="hidden" name="id" value="<?= (int) $p['id'] ?>">
+                                        <button type="submit" class="btn-add"
+                                            aria-label="Tambah <?= htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8') ?> ke keranjang">
+                                            <i class="fas fa-cart-plus" aria-hidden="true"></i> Tambah ke Keranjang
                                         </button>
                                     </form>
                                 </div>
@@ -176,15 +285,18 @@
             </div>
         <?php else: ?>
             <div class="text-center py-5">
-                <i class="fas fa-gift fa-2x text-muted mb-3"></i>
+                <i class="fas fa-gift fa-2x text-muted mb-3" aria-hidden="true"></i>
                 <p class="text-muted">Tidak ada kado yang cocok dengan pencarianmu.</p>
-                <a href="?page=products" class="btn btn-outline-primary mt-2">Tampilkan Semua Kado</a>
+                <a href="?page=products" class="btn-back-home mt-2">
+                    Tampilkan Semua Kado
+                </a>
             </div>
         <?php endif; ?>
 
+        <!-- Kembali ke Beranda -->
         <div class="text-center mt-5">
-            <a href="?page=landing" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left"></i> Kembali ke Beranda
+            <a href="?page=landing" class="btn-back-home" aria-label="Kembali ke beranda">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i> Kembali ke Beranda
             </a>
         </div>
     </div>

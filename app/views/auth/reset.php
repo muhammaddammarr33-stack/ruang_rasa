@@ -27,6 +27,14 @@
             background-color: var(--off-white);
             font-family: 'Poppins', sans-serif;
             color: var(--dark-grey);
+            padding: 1rem 0;
+        }
+
+        @media (min-height: 600px) {
+            body {
+                padding: 0;
+                min-height: 100vh;
+            }
         }
 
         .reset-new-card {
@@ -45,7 +53,7 @@
             color: var(--dark-grey);
         }
 
-        .reset-new-card p.subtitle {
+        .reset-new-card .subtitle {
             font-size: 1rem;
             color: var(--dark-grey);
             opacity: 0.85;
@@ -62,6 +70,8 @@
             border-radius: 12px;
             padding: 0.75rem 1rem;
             border: 1px solid #ddd;
+            font-size: 1rem;
+            transition: border-color 0.25s, box-shadow 0.25s;
         }
 
         .form-control:focus {
@@ -70,19 +80,53 @@
             outline: none;
         }
 
+        .input-icon {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-icon i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--soft-blue);
+            pointer-events: none;
+        }
+
+        .input-icon input {
+            padding-left: 2.75rem;
+        }
+
+        .form-text {
+            font-size: 0.85rem;
+            color: #777;
+            margin-top: 0.25rem;
+            margin-left: 2.75rem;
+            /* Selaras dengan teks input */
+        }
+
         .btn-update {
             background-color: var(--soft-blue);
             border: none;
             border-radius: 12px;
             padding: 0.85rem;
             font-weight: 600;
+            font-size: 1rem;
             color: white;
+            width: 100%;
             transition: background-color 0.3s, transform 0.2s;
         }
 
-        .btn-update:hover {
+        .btn-update:hover:not(:disabled) {
             background-color: #658db2;
             transform: translateY(-2px);
+        }
+
+        .btn-update:disabled {
+            opacity: 0.85;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .text-link {
@@ -101,26 +145,11 @@
             padding: 0.85rem 1rem;
             font-size: 0.95rem;
             margin-bottom: 1.25rem;
+            position: relative;
         }
 
         .alert-danger {
             border-left: 4px solid #e74c3c;
-        }
-
-        .input-icon {
-            position: relative;
-        }
-
-        .input-icon i {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--soft-blue);
-        }
-
-        .input-icon input {
-            padding-left: 2.75rem;
         }
 
         .shake {
@@ -144,23 +173,6 @@
                 transform: translateX(6px);
             }
         }
-
-        .form-text {
-            font-size: 0.85rem;
-            color: #777;
-            margin-top: 0.25rem;
-        }
-
-        /* Responsif: hindari potong di mobile */
-        body {
-            padding: 1rem 0;
-        }
-
-        @media (min-height: 600px) {
-            body {
-                padding: 0;
-            }
-        }
     </style>
 </head>
 
@@ -173,7 +185,7 @@
             </div>
 
             <?php if (!empty($_SESSION['error'])): ?>
-                <div class="alert alert-danger" role="alert">
+                <div class="alert alert-danger" role="alert" aria-live="polite">
                     <?= htmlspecialchars($_SESSION['error'], ENT_QUOTES, 'UTF-8');
                     unset($_SESSION['error']); ?>
                 </div>
@@ -184,14 +196,14 @@
                 <input type="hidden" name="token"
                     value="<?= htmlspecialchars($_GET['token'] ?? $_POST['token'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
 
-                <div class="mb-4 input-icon">
-                    <i class="fas fa-lock"></i>
+                <div class="input-icon">
+                    <i class="fas fa-lock" aria-hidden="true"></i>
                     <input type="password" name="password" class="form-control" placeholder="Minimal 6 karakter"
-                        required minlength="6">
-                    <small class="form-text">Gunakan kombinasi huruf & angka untuk keamanan lebih baik</small>
+                        required minlength="6" autocomplete="new-password" aria-label="Password baru">
+                    <div class="form-text">Gunakan kombinasi huruf & angka untuk keamanan lebih baik</div>
                 </div>
 
-                <button type="submit" class="btn btn-update w-100">Ubah Password</button>
+                <button type="submit" class="btn-update" id="updateButton">Ubah Password</button>
             </form>
 
             <div class="mt-4 text-center">
@@ -204,31 +216,30 @@
         document.addEventListener('DOMContentLoaded', function () {
             const form = document.getElementById('resetNewForm');
             const passwordInput = document.querySelector('input[name="password"]');
+            const updateButton = document.getElementById('updateButton');
 
-            // Jika ada error, shake & fokus ke password
+            // Shake & fokus jika ada error
             if (document.querySelector('.alert-danger')) {
                 form.classList.add('shake');
                 if (passwordInput) passwordInput.focus();
             }
 
-            // Prevent double-submit
-            if (form) {
+            // Cegah double-submit
+            if (form && updateButton) {
                 form.addEventListener('submit', function (e) {
-                    const btn = this.querySelector('button[type="submit"]');
-                    if (btn.disabled) {
+                    if (updateButton.disabled) {
                         e.preventDefault();
                         return;
                     }
-                    btn.disabled = true;
-                    btn.textContent = 'Mengubah...';
-                    // Biarkan form submit — jangan restore otomatis
+                    updateButton.disabled = true;
+                    updateButton.textContent = 'Mengubah...';
                 });
             }
 
             // Validasi real-time password
             if (passwordInput) {
                 passwordInput.addEventListener('input', function () {
-                    if (this.value.length > 0 && this.value.length < 6) {
+                    if (this.value && this.value.length < 6) {
                         this.setCustomValidity('Password minimal 6 karakter');
                     } else {
                         this.setCustomValidity('');
