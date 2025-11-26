@@ -234,12 +234,6 @@ $recentOrders = $recentOrders ?? [];
                 </a>
             </li>
             <li class="nav-item mt-auto">
-                <a class="nav-link" href="?page=settings">
-                    <i class="bi bi-gear nav-icon"></i>
-                    <span class="nav-text">Pengaturan</span>
-                </a>
-            </li>
-            <li class="nav-item mt-auto">
                 <a class="nav-link" href="?page=logout">
                     <i class="bi bi-box-arrow-right nav-icon"></i>
                     <span class="nav-text">Keluar</span>

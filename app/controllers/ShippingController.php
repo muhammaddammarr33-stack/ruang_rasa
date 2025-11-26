@@ -14,10 +14,6 @@ class ShippingController
             session_start();
     }
 
-    /* --------------------------------------
-     * API AJAX (Location)
-     * -------------------------------------- */
-
     public function provinces()
     {
         header('Content-Type: application/json');
@@ -29,7 +25,6 @@ class ShippingController
 
     public function cities()
     {
-        // Gunakan operator null coalescing (??) untuk keamanan
         $provinceId = $_GET['province_id'] ?? null;
 
         header('Content-Type: application/json');
@@ -57,19 +52,6 @@ class ShippingController
         }
     }
 
-    // CATATAN: Fungsi districts() dihapus karena endpoint tidak didukung
-    // atau memerlukan ID kota dari form POST/GET. Jika ingin menggunakannya,
-    // disarankan untuk menggunakan metode 'Direct Search' API Komerce.
-
-    /* --------------------------------------
-     * API AJAX (Cost Calculation)
-     * -------------------------------------- */
-
-    // app/controllers/ShippingController.php
-
-    // ... (Bagian require_once dan class ShippingController)
-
-    // app/controllers/ShippingController.php
     public function cost()
     {
         header('Content-Type: application/json');

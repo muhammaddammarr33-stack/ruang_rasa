@@ -87,14 +87,6 @@ class Shipping
         // Perhatikan: Kadang API Komerce memerlukan Key berbeda untuk endpoint ini.
         return $json['data'] ?? [];
     }
-    // ...
-
-    // CATATAN: Fungsi districts() dihapus karena endpoint-nya /destination/district/{city_id} 
-    // sering kali membutuhkan Key yang berbeda (mungkin Pro) atau memiliki format yang unik.
-
-    /* ----------------------------------------------------
-     * API SHIPPING COST (Menggunakan endpoint yang berhasil)
-     * ---------------------------------------------------- */
 
     public function cost($destination, $weight, $courier)
     {
@@ -109,13 +101,8 @@ class Shipping
         // Menggunakan endpoint yang berhasil Anda uji
         $json = $this->callApi("/calculate/district/domestic-cost", $post);
 
-        // KOREKSI: Beberapa respons Kommerce mengembalikan data di 'results' 
-        // atau langsung di 'data'. Kita coba asumsikan 'data' terlebih dahulu.
         return $json['data'] ?? $json['results'] ?? [];
     }
-    /* ====================================================
-     * DATABASE: shippings TABLE (Tidak ada perubahan)
-     * ==================================================== */
 
     public function createShipping($orderId, $courier, $cost)
     {
