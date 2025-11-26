@@ -108,7 +108,8 @@
         <div class="feedback-card mb-4">
             <div class="card-body">
                 <h5 class="card-title mb-2">Untuk:
-                    <?= htmlspecialchars($consultation['recipient'] ?? '-', ENT_QUOTES, 'UTF-8') ?></h5>
+                    <?= htmlspecialchars($consultation['recipient'] ?? '-', ENT_QUOTES, 'UTF-8') ?>
+                </h5>
                 <p class="mb-1"><strong>Acara:</strong>
                     <?= htmlspecialchars($consultation['occasion'] ?? '-', ENT_QUOTES, 'UTF-8') ?></p>
                 <p class="mb-1"><strong>Usia:</strong>
@@ -127,15 +128,29 @@
 
         <!-- Rekomendasi Produk -->
         <h5 class="mb-3">💡 Rekomendasi Produk</h5>
-        <?php if (!empty($suggestions)): ?>
-            <div class="row g-3">
+        <?php if ($suggestions): ?>
+            <div class="row mt-3">
                 <?php foreach ($suggestions as $s): ?>
-                    <div class="col-md-4">
-                        <div class="suggestion-card">
-                            <div class="card-body">
-                                <h6><?= htmlspecialchars($s['product_name'] ?? '-', ENT_QUOTES, 'UTF-8') ?></h6>
-                                <p class="text-muted mb-2">Rp <?= number_format($s['price'] ?? 0, 0, ',', '.') ?></p>
-                                <p class="small"><?= htmlspecialchars($s['reason'] ?? '', ENT_QUOTES, 'UTF-8') ?></p>
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body d-flex flex-column">
+                                <h6><?= htmlspecialchars($s['product_name']) ?></h6>
+                                <p class="text-danger fw-bold">Rp <?= number_format($s['price'], 0, ',', '.') ?></p>
+                                <p class="text-muted flex-grow-1"><?= htmlspecialchars($s['reason']) ?></p>
+
+                                <!-- Form Tambah ke Keranjang -->
+                                <form method="post" action="?page=add_to_cart" class="mt-auto">
+                                    <input type="hidden" name="id" value="<?= $s['product_id'] ?>">
+                                    <button type="submit" class="btn btn-primary btn-sm w-100 mb-1">
+                                        ➕ Tambah ke Keranjang
+                                    </button>
+                                </form>
+
+                                <!-- Tombol Beli Sekarang -->
+                                <a href="?page=checkout&product_id=<?= $s['product_id'] ?>"
+                                    class="btn btn-outline-primary btn-sm w-100">
+                                    💳 Beli Sekarang
+                                </a>
                             </div>
                         </div>
                     </div>

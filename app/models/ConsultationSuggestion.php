@@ -29,62 +29,141 @@ class ConsultationSuggestion
         return $q->fetchAll();
     }
 
-    public function autoSuggest($consultationId, $budget, $preference)
+    public function autoSuggest($consultationId, $consultationData)
     {
-        // Ambil seluruh produk
-        $stmt = $this->db->query("SELECT * FROM products");
-        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // Ekstrak data
+        $budgetRange = $consultationData['budget_range'] ?? '';
+        $interests = json_decode($consultationData['interests'] ?? '[]', true) ?: [];
+        $occasion = $consultationData['occasion'] ?? '';
+        $recipient = $consultationData['recipient'] ?? '';
+        $ageRange = $consultationData['age_range'] ?? '';
 
-        $preference = strtolower($preference);
-        $keywords = explode(' ', $preference);
+        // 1. Konversi budget ke angka
+        $budgetMap = [
+            '<100rb' => [0, 100000],
+            '100-300rb' => [100000, 300000],
+            '300-500rb' => [300000, 500000],
+            '>500rb' => [500000, 999999999],
+        ];
+        [$minBudget, $maxBudget] = $budgetMap[$budgetRange] ?? [0, 999999999];
 
-        $scored = [];
+        // 2. Mapping acara ke kategori
+        $occasionToCategory = [
+            'Ulang Tahun' => [1],
+            'Lebaran' => [2],
+            'Natal' => [3],
+            'Valentine' => [4],
+            'Hari Ibu' => [5],
+            'Hari Ayah' => [5],
+            'Kelulusan' => [6],
+            'Pernikahan' => [7],
+            'Kelahiran' => [8],
+            'Corporate' => [9],
+            'Imlek' => [10],
+            'Tanpa Acara' => []
+        ];
 
-        foreach ($products as $p) {
+        $categories = $occasionToCategory[$occasion] ?? [];
 
-            $score = 0;
+        // 3. Mapping minat ke kategori
+        $interestToCategory = [
+            'Teknologi' => [11],
+            'Fashion' => [12],
+            'Memasak' => [13],
+            'Olahraga' => [14],
+            'Membaca' => [15],
+            'Seni' => [16],
+            'Musik' => [17],
+            'Travel' => [18],
+            'Game' => [19],
+            'Kecantikan' => [20],
+        ];
 
-            // 1. Score based on budget match
-            if ($p['price'] <= $budget) {
-                $score += 50;
-            } else {
-                // diskon kalau terlalu mahal
-                $score -= 20;
+        foreach ($interests as $interest) {
+            if (isset($interestToCategory[$interest])) {
+                $categories = array_merge($categories, $interestToCategory[$interest]);
             }
-
-            // 2. Score based on keyword relevance
-            foreach ($keywords as $word) {
-                if (stripos($p['name'], $word) !== false)
-                    $score += 20;
-                if (stripos($p['description'], $word) !== false)
-                    $score += 10;
-            }
-
-            // 3. Bonus kategori (jika ada)
-            if (!empty($p['category_id'])) {
-                if (stripos($preference, 'bunga') !== false && $p['category_id'] == 1)
-                    $score += 25;
-                if (stripos($preference, 'cokelat') !== false && $p['category_id'] == 2)
-                    $score += 25;
-            }
-
-            $p['score'] = $score;
-            $scored[] = $p;
         }
 
-        // Urutkan berdasarkan score tertinggi
-        usort($scored, fn($a, $b) => $b['score'] <=> $a['score']);
+        // 4. Tambahkan kategori berdasarkan penerima
+        $recipientToCategory = [
+            'Pasangan' => [25],
+            'Orang Tua' => [5],
+            'Anak' => [23],
+            'Teman' => [24],
+            'Rekan Kerja' => [9],
+            'Diri Sendiri' => [21, 22] // default wanita & pria
+        ];
 
-        // Ambil top 3
-        $top3 = array_slice($scored, 0, 3);
+        if (isset($recipientToCategory[$recipient])) {
+            $categories = array_merge($categories, $recipientToCategory[$recipient]);
+        }
 
-        // Simpan ke consultation_suggestions
+        // 5. Tambahkan kategori berdasarkan usia
+        if ($ageRange === '<12') {
+            $categories[] = 23; // Untuk Anak-anak
+        } elseif ($ageRange === '13-17') {
+            $categories[] = 24; // Untuk Remaja
+        } elseif ($ageRange === '18-25') {
+            // Tambahkan berdasarkan gender jika diketahui, default remaja
+            $categories[] = 24;
+        } elseif ($ageRange === '26-40') {
+            // Dewasa muda - bisa semua
+        } elseif ($ageRange === '>40') {
+            // Prioritaskan kategori universal
+        }
+
+        // Hapus duplikat
+        $categories = array_unique($categories);
+
+        // 6. Bangun query
+        $sql = "SELECT * FROM products WHERE price BETWEEN ? AND ?";
+        $params = [$minBudget, $maxBudget];
+
+        if (!empty($categories)) {
+            $placeholders = str_repeat('?,', count($categories) - 1) . '?';
+            $sql .= " AND category_id IN ($placeholders)";
+            $params = array_merge($params, $categories);
+        }
+
+        // Ambil produk
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Fallback: jika tidak ada yang cocok, ambil di budget saja
+        if (empty($products)) {
+            $stmt = $this->db->prepare("
+            SELECT * FROM products 
+            WHERE price BETWEEN ? AND ? 
+            ORDER BY featured DESC, stock DESC
+            LIMIT 5
+        ");
+            $stmt->execute([$minBudget, $maxBudget]);
+            $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        // Urutkan berdasarkan featured & stok
+        usort($products, function ($a, $b) {
+            if ($a['featured'] != $b['featured']) {
+                return $b['featured'] - $a['featured'];
+            }
+            return $b['stock'] - $a['stock'];
+        });
+
+        $top3 = array_slice($products, 0, 3);
+
+        // Simpan ke database
         foreach ($top3 as $p) {
+            $reason = "Direkomendasikan untuk ";
+            $reason .= $recipient ? "'{$recipient}'" : "penerima";
+            $reason .= $occasion && $occasion !== 'Tanpa Acara' ? " pada acara '{$occasion}'" : "";
+            $reason .= " dengan budget {$budgetRange}.";
+
             $stmt = $this->db->prepare("
             INSERT INTO consultation_suggestions (consultation_id, product_id, reason, created_at)
             VALUES (?, ?, ?, NOW())
         ");
-            $reason = "Produk cocok dengan budget dan preferensi Anda.";
             $stmt->execute([$consultationId, $p['id'], $reason]);
         }
 

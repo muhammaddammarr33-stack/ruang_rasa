@@ -156,7 +156,6 @@ $recentOrders = $recentOrders ?? [];
             font-size: 0.9rem;
         }
 
-        /* Perbaikan layout: atur lebar input agar sejajar */
         .date-range-group {
             display: flex;
             align-items: center;
@@ -174,12 +173,6 @@ $recentOrders = $recentOrders ?? [];
             font-size: 0.875rem;
         }
 
-        /* Atur tinggi card agar seragam */
-        .card-height {
-            min-height: 100%;
-        }
-
-        /* Scrollbar halus */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -278,28 +271,41 @@ $recentOrders = $recentOrders ?? [];
                 </div>
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" id="compareToggle" style="height:16px;width:28px;">
-                    <label class="form-check-label small-muted" for="compareToggle"
-                        style="font-size:0.8125rem;">Bandingkan</label>
+                    <label class="form-check-label small-muted" for="compareToggle" style="font-size:0.8125rem;">Bandingkan</label>
                 </div>
             </div>
         </div>
 
-        <!-- KPI Cards -->
+        <!-- KPI Cards DENGAN ID -->
         <div class="row g-2 mb-2">
-            <?php foreach ([
-                ['label' => 'Total Pendapatan', 'value' => 'Rp ' . number_format($metrics['revenue'], 0, ',', '.'), 'prev' => 'Rp ' . number_format($metrics['compare']['revenue_prev'] ?? 0, 0, ',', '.')],
-                ['label' => 'Pesanan', 'value' => number_format($metrics['orders'], 0, ',', '.'), 'prev' => number_format($metrics['compare']['orders_prev'] ?? 0, 0, ',', '.')],
-                ['label' => 'AOV', 'value' => 'Rp ' . number_format($metrics['aov'], 0, ',', '.'), 'prev' => 'Rp ' . number_format($metrics['compare']['aov_prev'] ?? 0, 0, ',', '.')],
-                ['label' => 'Produk Terjual', 'value' => number_format($metrics['items'], 0, ',', '.'), 'prev' => number_format($metrics['compare']['items_prev'] ?? 0, 0, ',', '.')]
-            ] as $kpi): ?>
-                <div class="col-6 col-md-3">
-                    <div class="card kpi">
-                        <div class="small-muted"><?= $kpi['label'] ?></div>
-                        <div class="value"><?= $kpi['value'] ?></div>
-                        <div class="small-muted">Prev: <?= $kpi['prev'] ?></div>
-                    </div>
+            <div class="col-6 col-md-3">
+                <div class="card kpi">
+                    <div class="small-muted">Total Pendapatan</div>
+                    <div class="value" id="kpiRevenue">Rp <?= number_format($metrics['revenue'], 0, ',', '.') ?></div>
+                    <div class="small-muted">Prev: <span id="kpiRevenuePrev">Rp <?= number_format($metrics['compare']['revenue_prev'] ?? 0, 0, ',', '.') ?></span></div>
                 </div>
-            <?php endforeach; ?>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card kpi">
+                    <div class="small-muted">Pesanan</div>
+                    <div class="value" id="kpiOrders"><?= number_format($metrics['orders'], 0, ',', '.') ?></div>
+                    <div class="small-muted">Prev: <span id="kpiOrdersPrev"><?= number_format($metrics['compare']['orders_prev'] ?? 0, 0, ',', '.') ?></span></div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card kpi">
+                    <div class="small-muted">AOV</div>
+                    <div class="value" id="kpiAOV">Rp <?= number_format($metrics['aov'], 0, ',', '.') ?></div>
+                    <div class="small-muted">Prev: <span id="kpiAOVPrev">Rp <?= number_format($metrics['compare']['aov_prev'] ?? 0, 0, ',', '.') ?></span></div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card kpi">
+                    <div class="small-muted">Produk Terjual</div>
+                    <div class="value" id="kpiItems"><?= number_format($metrics['items'], 0, ',', '.') ?></div>
+                    <div class="small-muted">Prev: <span id="kpiItemsPrev"><?= number_format($metrics['compare']['items_prev'] ?? 0, 0, ',', '.') ?></span></div>
+                </div>
+            </div>
         </div>
 
         <div class="row g-2">
@@ -335,15 +341,15 @@ $recentOrders = $recentOrders ?? [];
                         <ul id="recentOrdersList" class="list-unstyled mb-0">
                             <?php if (!empty($recentOrders)):
                                 foreach ($recentOrders as $o): ?>
-                                    <li class="mb-2">
-                                        <div><strong>#<?= $o['id'] ?></strong>
-                                            <?= htmlspecialchars($o['user_name'] ?? 'Guest') ?></div>
-                                        <div class="small-muted">Rp <?= number_format($o['total_amount'], 0, ',', '.') ?> —
-                                            <?= $o['created_at'] ?>
-                                        </div>
-                                    </li>
-                                <?php endforeach; else: ?>
-                                <li class="text-muted small">Belum ada pesanan</li>
+                                            <li class="mb-2">
+                                                <div><strong>#<?= $o['id'] ?></strong>
+                                                    <?= htmlspecialchars($o['user_name'] ?? 'Guest') ?></div>
+                                                <div class="small-muted">Rp <?= number_format($o['total_amount'], 0, ',', '.') ?> —
+                                                    <?= $o['created_at'] ?>
+                                                </div>
+                                            </li>
+                                    <?php endforeach; else: ?>
+                                    <li class="text-muted small">Belum ada pesanan</li>
                             <?php endif; ?>
                         </ul>
                     </div>
@@ -366,7 +372,6 @@ $recentOrders = $recentOrders ?? [];
             main.classList.toggle('sidebar-collapsed');
         });
 
-        /* ---------- helpers ---------- */
         function formatRp(n) {
             if (isNaN(n)) return 'Rp 0';
             return 'Rp ' + Number(n).toLocaleString('id-ID');
@@ -374,19 +379,26 @@ $recentOrders = $recentOrders ?? [];
         function q(sel) { return document.querySelector(sel); }
         function qAll(sel) { return document.querySelectorAll(sel); }
 
-        /* ---------- initial data from PHP ---------- */
+        // Data awal dari PHP
         const labels = <?= json_encode(array_keys($salesChart)) ?>;
         const initialRevenue = <?= json_encode(array_map(fn($v) => (float) ($v['revenue'] ?? 0), $salesChart)) ?>;
         const initialOrders = <?= json_encode(array_map(fn($v) => (int) ($v['orders'] ?? 0), $salesChart)) ?>;
         const topProducts = <?= json_encode($topProducts) ?>;
         const topCategories = <?= json_encode($topCategories) ?>;
 
-        /* ---------- Chart: Trend ---------- */
-        let trendChart = null; // ✅ deklarasi di luar
+        // Simpan semua chart
+        let trendChart = null;
+        let topProductsChart = null;
+        let topCategoriesChart = null;
 
-        const ctxTrend = q('#trendChart');
-        if (ctxTrend) {
-            const trendCtx = ctxTrend.getContext('2d');
+        /* ---------- Render Chart Functions ---------- */
+        function renderTrendChart(labels, revenue, orders) {
+            const ctx = q('#trendChart');
+            if (!ctx) return;
+
+            if (trendChart) trendChart.destroy();
+
+            const trendCtx = ctx.getContext('2d');
             trendChart = new Chart(trendCtx, {
                 type: 'line',
                 data: {
@@ -394,7 +406,7 @@ $recentOrders = $recentOrders ?? [];
                     datasets: [
                         {
                             label: 'Revenue',
-                            data: initialRevenue,
+                            data: revenue,
                             yAxisID: 'y',
                             borderColor: '#7093B3',
                             backgroundColor: 'rgba(112,147,179,0.15)',
@@ -404,7 +416,7 @@ $recentOrders = $recentOrders ?? [];
                         },
                         {
                             label: 'Orders',
-                            data: initialOrders,
+                            data: orders,
                             yAxisID: 'y1',
                             type: 'bar',
                             backgroundColor: 'rgba(112,147,179,0.35)'
@@ -415,19 +427,13 @@ $recentOrders = $recentOrders ?? [];
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            labels: {
-                                font: { size: 10 }
-                            }
-                        }
+                        legend: { labels: { font: { size: 10 } } }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
                             position: 'left',
-                            ticks: {
-                                callback: v => formatRp(v)
-                            }
+                            ticks: { callback: v => formatRp(v) }
                         },
                         y1: {
                             beginAtZero: true,
@@ -439,21 +445,28 @@ $recentOrders = $recentOrders ?? [];
             });
         }
 
-        /* ---------- Chart: Top Products ---------- */
-        const ctxProd = q('#topProductsChart');
-        if (ctxProd && topProducts.length > 0) {
-            const productNames = topProducts.map(p => (p.name || '').length > 20 ? (p.name || '').substring(0, 20) + '…' : (p.name || ''));
-            const productQty = topProducts.map(p => (p.qty_sold ?? 0));
-            const prodCtx = ctxProd.getContext('2d');
-            new Chart(prodCtx, {
+        function renderTopProducts(products) {
+            const ctx = q('#topProductsChart');
+            if (!ctx) return;
+
+            if (topProductsChart) topProductsChart.destroy();
+
+            if (!products || products.length === 0) {
+                ctx.parentNode.innerHTML = '<div class="text-muted small">Tidak ada data</div>';
+                return;
+            }
+
+            const names = products.map(p => 
+                (p.name || '').length > 20 ? (p.name || '').substring(0, 20) + '…' : (p.name || '')
+            );
+            const qty = products.map(p => parseInt(p.qty_sold) || 0);
+
+            const newCtx = ctx.getContext('2d');
+            topProductsChart = new Chart(newCtx, {
                 type: 'bar',
                 data: {
-                    labels: productNames,
-                    datasets: [{
-                        label: 'Jumlah Terjual',
-                        data: productQty,
-                        backgroundColor: '#7093B3'
-                    }]
+                    labels: names,
+                    datasets: [{ label: 'Jumlah Terjual', data: qty, backgroundColor: '#7093B3' }]
                 },
                 options: {
                     indexAxis: 'y',
@@ -461,31 +474,35 @@ $recentOrders = $recentOrders ?? [];
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        x: {
-                            beginAtZero: true,
-                            ticks: { font: { size: 9 } }
-                        }
+                        x: { beginAtZero: true, ticks: { font: { size: 9 } } }
                     },
                     layout: { padding: { left: 0, right: 10 } }
                 }
             });
         }
 
-        /* ---------- Chart: Top Categories ---------- */
-        const ctxCat = q('#topCategoriesChart');
-        if (ctxCat && topCategories.length > 0) {
-            const catNames = topCategories.map(c => (c.category || '').length > 20 ? (c.category || '').substring(0, 20) + '…' : (c.category || ''));
-            const catQty = topCategories.map(c => (c.qty_sold ?? 0));
-            const catCtx = ctxCat.getContext('2d');
-            new Chart(catCtx, {
+        function renderTopCategories(categories) {
+            const ctx = q('#topCategoriesChart');
+            if (!ctx) return;
+
+            if (topCategoriesChart) topCategoriesChart.destroy();
+
+            if (!categories || categories.length === 0) {
+                ctx.parentNode.innerHTML = '<div class="text-muted small">Tidak ada data</div>';
+                return;
+            }
+
+            const names = categories.map(c => 
+                (c.category || '').length > 20 ? (c.category || '').substring(0, 20) + '…' : (c.category || '')
+            );
+            const qty = categories.map(c => parseInt(c.qty_sold) || 0);
+
+            const newCtx = ctx.getContext('2d');
+            topCategoriesChart = new Chart(newCtx, {
                 type: 'bar',
                 data: {
-                    labels: catNames,
-                    datasets: [{
-                        label: 'Jumlah Terjual',
-                        data: catQty,
-                        backgroundColor: '#7093B3'
-                    }]
+                    labels: names,
+                    datasets: [{ label: 'Jumlah Terjual', data: qty, backgroundColor: '#7093B3' }]
                 },
                 options: {
                     indexAxis: 'y',
@@ -493,17 +510,19 @@ $recentOrders = $recentOrders ?? [];
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        x: {
-                            beginAtZero: true,
-                            ticks: { font: { size: 9 } }
-                        }
+                        x: { beginAtZero: true, ticks: { font: { size: 9 } } }
                     },
                     layout: { padding: { left: 0, right: 10 } }
                 }
             });
         }
 
-        /* ---------- Date range ---------- */
+        /* ---------- Render Awal ---------- */
+        renderTrendChart(labels, initialRevenue, initialOrders);
+        renderTopProducts(topProducts);
+        renderTopCategories(topCategories);
+
+        /* ---------- Date Range ---------- */
         function parseRangePreset(preset) {
             const today = new Date();
             let start, end;
@@ -540,28 +559,35 @@ $recentOrders = $recentOrders ?? [];
             const end = q('#endDate').value;
             const compare = q('#compareToggle').checked ? 1 : 0;
 
-            fetch(`?page=admin_dashboard_data&start=${start}&end=${end}&compare=${compare}`)
+            fetch(`?page=admin_dashboard_data&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&compare=${compare}`)
                 .then(r => r.json())
                 .then(j => {
                     if (j.error) return alert(j.error);
 
-                    // Update Trend Chart
-                    if (trendChart) {
-                        trendChart.data.labels = j.labels || [];
-                        trendChart.data.datasets[0].data = j.revenue || [];
-                        trendChart.data.datasets[1].data = j.orders || [];
-                        trendChart.update();
-                    }
+                    // Update KPI
+                    q('#kpiRevenue').textContent = formatRp(j.metrics.revenue);
+                    q('#kpiOrders').textContent = (j.metrics.orders || 0).toLocaleString('id-ID');
+                    q('#kpiAOV').textContent = formatRp(Math.round(j.metrics.aov || 0));
+                    q('#kpiItems').textContent = (j.metrics.items || 0).toLocaleString('id-ID');
+                    q('#kpiRevenuePrev').textContent = formatRp(j.metrics.compare.revenue_prev || 0);
+                    q('#kpiOrdersPrev').textContent = (j.metrics.compare.orders_prev || 0).toLocaleString('id-ID');
+                    q('#kpiAOVPrev').textContent = formatRp(Math.round(j.metrics.compare.aov_prev || 0));
+                    q('#kpiItemsPrev').textContent = (j.metrics.compare.items_prev || 0).toLocaleString('id-ID');
 
-                    // Update Recent Orders List
+                    // Update semua chart
+                    renderTrendChart(j.labels || [], j.revenue || [], j.orders || []);
+                    renderTopProducts(j.topProducts || []);
+                    renderTopCategories(j.topCategories || []);
+
+                    // Update pesanan terbaru
                     const roList = q('#recentOrdersList');
                     if (roList) {
                         roList.innerHTML = '';
-                        if (j.recentOrders?.length) {
+                        if (Array.isArray(j.recentOrders) && j.recentOrders.length) {
                             j.recentOrders.forEach(o => {
                                 roList.insertAdjacentHTML('beforeend',
                                     `<li class="mb-2"><div><strong>#${o.id}</strong> ${o.user_name || 'Guest'}</div>
-                                <div class="small-muted">${formatRp(o.total_amount)} — ${o.created_at}</div></li>`
+                                    <div class="small-muted">${formatRp(o.total_amount)} — ${o.created_at}</div></li>`
                                 );
                             });
                         } else {
@@ -570,8 +596,8 @@ $recentOrders = $recentOrders ?? [];
                     }
                 })
                 .catch(err => {
-                    console.error(err);
-                    alert('Gagal memuat data.');
+                    console.error('Error:', err);
+                    alert('Gagal memuat data. Lihat Console (F12).');
                 });
         }
 

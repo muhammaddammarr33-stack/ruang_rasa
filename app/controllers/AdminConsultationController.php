@@ -45,18 +45,14 @@ class AdminConsultationController
     public function aiSuggest()
     {
         $id = $_GET['id'];
-        $c = $this->cons->find($id);
+        $consultation = $this->cons->find($id); // Ambil SEMUA kolom
 
-        $result = $this->suggest->autoSuggest(
-            $id,
-            $c['budget'],
-            $c['preference']
-        );
-
+        $result = $this->suggest->autoSuggest($id, $consultation);
         $this->cons->updateStatus($id, 'suggested');
 
-        $_SESSION['success'] = "AI berhasil membuat rekomendasi otomatis!";
+        $_SESSION['success'] = "✅ Rekomendasi AI berhasil dibuat!";
         header("Location: ?page=admin_consultation_detail&id=$id");
+        exit;
     }
 
     /* =========================
