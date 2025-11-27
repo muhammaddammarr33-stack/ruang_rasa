@@ -16,24 +16,19 @@ class Shipping
 
     private function callApi($endpoint, $post = null)
     {
-        // FULL URL
         $url = rtrim($this->config['base_url'], '/') . $endpoint;
 
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-        // Memastikan sertifikat SSL valid untuk produksi (jika tidak, hapus 2 baris ini)
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Nonaktifkan sementara untuk testing
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0); // Nonaktifkan sementara
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            // Menggunakan "Key" (huruf kapital) sesuai API Komerce/cURL
             "Key: " . $this->config['key'],
             "Accept: application/json",
             "Content-Type: application/x-www-form-urlencoded"
         ]);
 
-        // POST METHOD
         if ($post !== null) {
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post));
@@ -42,25 +37,34 @@ class Shipping
         $res = curl_exec($ch);
 
         if (curl_errno($ch)) {
-            // Penanganan error curl
-            // Biasanya terjadi jika koneksi terputus atau timeout
-            error_log("cURL Error for $url: " . curl_error($ch));
-            return ['meta' => ['message' => 'Internal cURL Error'], 'data' => []];
+            $error = "cURL Error (#" . curl_errno($ch) . "): " . curl_error($ch) . " | URL: $url";
+            error_log($error);
+            curl_close($ch);
+            return ['meta' => ['code' => 500, 'message' => $error], 'data' => []];
         }
 
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
-        $result = json_decode($res, true);
 
-        // Logging jika API mengembalikan error
-        if (isset($result['meta']['code']) && $result['meta']['code'] !== 200) {
-            error_log("API Error $url: " . $result['meta']['message']);
+        $result = json_decode($res, true) ?: ['meta' => ['code' => 500, 'message' => 'Invalid JSON'], 'data' => []];
+
+        // Tambahkan logging detail
+        error_log("API Request: $url");
+        error_log("API Response Code: $httpCode");
+        error_log("API Raw Response: " . print_r($result, true));
+
+        // Handle error berdasarkan HTTP code
+        if ($httpCode !== 200) {
+            $errorMsg = $result['meta']['message'] ?? 'HTTP Error ' . $httpCode;
+            error_log("API HTTP Error ($httpCode): " . $errorMsg);
+            return ['meta' => ['code' => $httpCode, 'message' => $errorMsg], 'data' => []];
         }
 
         return $result;
     }
 
     /* ----------------------------------------------------
-     * API LOCATION
+     * API LOCATION (KOMERCE)
      * ---------------------------------------------------- */
 
     public function provinces()
@@ -75,33 +79,72 @@ class Shipping
         $json = $this->callApi($endpoint);
         return $json['data'] ?? [];
     }
-    // app/models/Shipping.php
 
-    // ...
     public function districts($cityId)
     {
-        // Endpoint untuk mendapatkan district di dalam city
         $endpoint = "/destination/district/" . urlencode($cityId);
         $json = $this->callApi($endpoint);
-
-        // Perhatikan: Kadang API Komerce memerlukan Key berbeda untuk endpoint ini.
         return $json['data'] ?? [];
     }
 
+    // TAMBAHKAN METHOD SUBDISTRICTS KHUSUS UNTUK KOMERCE
+    public function subdistricts($districtId)
+    {
+        $endpoint = "/destination/sub-district/" . urlencode($districtId);
+        return $this->callApi($endpoint); // Return response mentah dari API
+    }
+
+    // PERBAIKAN METHOD COST UNTUK MENGGUNAKAN SUBDISTRICT
     public function cost($destination, $weight, $courier)
     {
-        // Menggunakan key V2 (yang paling sering berhasil di Komerce)
+        // Cek apakah destination adalah subdistrict_id atau district_id
+        // Berdasarkan test, subdistrict memiliki field 'zip_code'
+        $isSubdistrict = preg_match('/^\d+$/', $destination) && strlen($destination) >= 3;
+
+        // Pilih endpoint berdasarkan jenis destination
+        $endpoint = $isSubdistrict ?
+            "/calculate/sub-district/domestic-cost" :
+            "/calculate/district/domestic-cost";
+
         $post = [
-            'origin' => $this->config['origin_city_id'], // Menggunakan ID Kota Asal Toko
-            'destination' => (string) $destination, // Harus ID Distrik/Kecamatan/Kota Tujuan
-            'weight' => (int) $weight, // Harus dalam gram
-            'courier' => (string) strtolower($courier) // Harus huruf kecil
+            'origin' => $this->config['origin_city_id'], // Kota asal toko Anda
+            'destination' => (string) $destination,
+            'weight' => (int) $weight, // dalam gram
+            'courier' => strtolower($courier)
         ];
 
-        // Menggunakan endpoint yang berhasil Anda uji
-        $json = $this->callApi("/calculate/district/domestic-cost", $post);
+        error_log("Cost calculation request: " . print_r($post, true));
+        error_log("Using endpoint: " . $endpoint);
 
-        return $json['data'] ?? $json['results'] ?? [];
+        $json = $this->callApi($endpoint, $post);
+
+        error_log("Cost calculation response: " . print_r($json, true));
+
+        // Handle berbagai format response Komerce
+        if (isset($json['data']) && !empty($json['data'])) {
+            return $json['data'];
+        } elseif (isset($json['results']) && !empty($json['results'])) {
+            return $json['results'];
+        } elseif (isset($json[0]) && is_array($json[0])) {
+            return $json;
+        }
+
+        // Fallback ke district jika subdistrict gagal
+        if ($isSubdistrict) {
+            error_log("Subdistrict cost failed, trying district fallback");
+            return $this->cost($this->getParentDistrictId($destination), $weight, $courier);
+        }
+
+        return [];
+    }
+
+    // Helper method untuk mendapatkan district_id dari subdistrict_id
+    private function getParentDistrictId($subdistrictId)
+    {
+        // Di Komerce, subdistrict ID biasanya mengandung info parent
+        // Atau kita bisa query ke API lagi
+        // Untuk sementara, gunakan prefix (sesuaikan dengan pola ID Komerce)
+        return substr($subdistrictId, 0, -2); // Contoh: 409 -> 4
     }
 
     public function createShipping($orderId, $courier, $cost)

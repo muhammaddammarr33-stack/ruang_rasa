@@ -344,6 +344,11 @@ switch ($page) {
         (new ShippingController())->districts();
         exit; // Wajib exit;
 
+    case 'shipping_subdistricts':
+        require_once __DIR__ . '/../app/controllers/ShippingController.php';
+        (new ShippingController())->subdistricts();
+        exit; // Wajib exit;
+
     case 'shipping_cost':
         require_once __DIR__ . '/../app/controllers/ShippingController.php';
         (new ShippingController())->cost();
