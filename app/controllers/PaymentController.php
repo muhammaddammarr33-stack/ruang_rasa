@@ -8,7 +8,7 @@ require_once __DIR__ . '/../models/Memberships.php';
 $configPath = __DIR__ . '/../config_midtrans.php';
 if (!file_exists($configPath)) {
     http_response_code(500);
-    echo json_encode(['error' => 'Midtrans config missing: ' . $configPath]);
+    echo json_encode(['error' => "Midtrans config missing: $configPath"]);
     exit;
 }
 
@@ -58,7 +58,7 @@ class PaymentController
         $shipping = $orderModel->getShipping($orderId);
         if ($shipping && isset($shipping['shipping_cost']) && $shipping['shipping_cost'] > 0) {
             $items[] = [
-                'id' => 'shipping-' . $orderId,
+                'id' => "shipping-$orderId",
                 'price' => (float) $shipping['shipping_cost'],
                 'quantity' => 1,
                 'name' => 'Ongkos Kirim (' . ($shipping['courier'] ?? 'JNE') . ')'

@@ -237,6 +237,8 @@ $config = require __DIR__ . '/../../../app/config_midtrans.php';
                         })
                     })
                         .then(() => {
+
+
                             window.location.href = "?page=payment_verify&id=<?= urlencode($orderId) ?>";
                         })
                         .catch(err => {
