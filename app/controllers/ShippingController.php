@@ -159,7 +159,7 @@ class ShippingController
 
         $destination = $_POST['destination'] ?? null;
         $courier = $_POST['courier'] ?? null;
-        $weight = (int) ($_POST['weight'] ?? 1) * 1000; // KG to gram
+        $weight = (int) ($_POST['weight'] ?? 1); // KG to gram
 
         if (!$destination || !$courier || $weight <= 0) {
             echo json_encode([
@@ -172,6 +172,7 @@ class ShippingController
 
         try {
             $costs = $this->model->cost($destination, $weight, $courier);
+
 
             // Format ulang response sesuai struktur Komerce yang sebenarnya
             $formattedCosts = [];

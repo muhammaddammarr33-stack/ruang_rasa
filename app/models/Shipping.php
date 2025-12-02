@@ -160,7 +160,7 @@ class Shipping
     public function updateTracking($orderId, $tracking)
     {
         $stmt = $this->db->prepare("
-            UPDATE shippings 
+            UPDATE shippings
             SET tracking_number = ?, status = 'shipped', updated_at = NOW()
             WHERE order_id = ?
         ");
@@ -171,7 +171,7 @@ class Shipping
     public function updateStatus($orderId, $status)
     {
         $stmt = $this->db->prepare("
-            UPDATE shippings 
+            UPDATE shippings
             SET status = ?, updated_at = NOW()
             WHERE order_id = ?
         ");

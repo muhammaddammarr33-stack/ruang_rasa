@@ -693,6 +693,7 @@ $displayWeight = ceil($totalWeight / 1000);
                 form.append("weight", totalWeight); // Total weight dalam gram
                 form.append("courier", courier);
 
+
                 fetch("?page=shipping_cost", {
                     method: "POST",
                     body: form

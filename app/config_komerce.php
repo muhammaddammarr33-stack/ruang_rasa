@@ -9,7 +9,7 @@ return [
 
     // Opsi tambahan untuk testing
     'debug_mode' => true, // Set false di production
-    'default_weight' => 1000// 1kg default
+    'default_weight' => 1000 // 1kg default
 
 ];
 // Zuqs8LOM580c679d15e1663bdoNtudXs
