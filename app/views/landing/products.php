@@ -1,4 +1,3 @@
-<?php // app/views/landing/products.php ?>
 <!doctype html>
 <html lang="id">
 
@@ -118,6 +117,24 @@
 
         .btn-add:hover:not(:disabled) {
             background-color: #658db2;
+        }
+
+        .btn-search {
+            background-color: #f8f9fa;
+            color: var(--soft-blue);
+            border: 1px solid var(--soft-blue);
+            border-radius: 10px;
+            padding: 0.6rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: block;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-search:hover:not(:disabled) {
+            background-color: var(--soft-blue);
+            color: white;
         }
 
         .btn-detail {
@@ -243,12 +260,11 @@
                         <div class="product-card">
                             <img src="uploads/<?= htmlspecialchars($p['image'] ?? 'noimage.png', ENT_QUOTES, 'UTF-8') ?>"
                                 class="card-img-top" alt="<?= htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8') ?>"
-                                onerror="this.src='https://via.placeholder.com/300x200?text=Gambar+Tidak+Tersedia'">
+                                onerror="this.src='https://placehold.co/300x200?text=Gambar+Tidak+Tersedia&font=poppins'">
                             <div class="card-body">
                                 <h6 class="card-title"><?= htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8') ?></h6>
                                 <p class="category-badge">
                                     <?= htmlspecialchars($p['category_name'] ?? '-', ENT_QUOTES, 'UTF-8') ?></p>
-
                                 <div class="mb-2">
                                     <?php if (!empty($p['discount_percent']) && $p['discount_percent'] > 0): ?>
                                         <div class="price-original">

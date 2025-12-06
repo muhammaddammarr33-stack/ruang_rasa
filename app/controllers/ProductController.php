@@ -180,7 +180,7 @@ class ProductController
         }
 
         $_SESSION['success'] = "Gambar berhasil dihapus.";
-        header("Location: ?page=admin_product_form&id=" . $productId);
+        header("Location: ?page=admin_product_form&id=$productId");
     }
 
     /* =========================
@@ -244,9 +244,9 @@ class ProductController
             $db = DB::getInstance();
             $stmt = $db->prepare("
             SELECT c.id,
-                   (SELECT COUNT(*) FROM consultation_messages m2 
-                    WHERE m2.consultation_id = c.id 
-                    AND m2.sender_id != ? 
+                   (SELECT COUNT(*) FROM consultation_messages m2
+                    WHERE m2.consultation_id = c.id
+                    AND m2.sender_id != ?
                     AND (m2.created_at > c.last_read_at OR c.last_read_at IS NULL)
                    ) as unread
             FROM consultations c

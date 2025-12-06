@@ -1,5 +1,5 @@
 <?php
-date_default_timezone_set('Asia/Jakarta'); // 👈 TAMBAHKAN INI
+date_default_timezone_set('Asia/Jakarta');
 // public/index.php
 require_once __DIR__ . '/../app/controllers/AuthController.php';
 require_once __DIR__ . '/../app/controllers/AuthVerifyController.php'; // ✅ tambah baris ini
@@ -87,17 +87,20 @@ switch ($page) {
     // admin
     case 'admin_dashboard':
         require_once __DIR__ . '/../app/controllers/AdminDashboardController.php';
-        (new AdminDashboardController())->index();
+        $adminDashboardCtrl = new AdminDashboardController();
+        $adminDashboardCtrl->index();
         break;
 
     case 'admin_dashboard_data':
         require_once __DIR__ . '/../app/controllers/AdminDashboardController.php';
-        (new AdminDashboardController())->data(); // returns JSON for AJAX
+        $adminDashboardCtrl = new AdminDashboardController();
+        $adminDashboardCtrl->data(); // returns JSON for AJAX
         break;
 
     case 'admin_activity':
         require_once __DIR__ . '/../app/controllers/AdminDashboardController.php';
-        (new AdminDashboardController())->activity(); // returns JSON recent activity
+        $adminDashboardCtrl = new AdminDashboardController();
+        $adminDashboardCtrl->activity(); // returns JSON recent activity
         break;
 
     // ...
@@ -173,34 +176,33 @@ switch ($page) {
 
     // Cart
     case 'cart':
-        require_once __DIR__ . '/../app/controllers/CartController.php';
-        (new CartController())->index();
+        $cartCtrl->index();
         break;
     case 'add_to_cart':
-        require_once __DIR__ . '/../app/controllers/CartController.php';
-        (new CartController())->add();
+        $cartCtrl->add();
         break;
     case 'remove_from_cart':
-        require_once __DIR__ . '/../app/controllers/CartController.php';
-        (new CartController())->remove();
+        $cartCtrl->remove();
         break;
     case 'cart_update':
-        require_once __DIR__ . '/../app/controllers/CartController.php';
-        (new CartController())->update(); // optional if you implement qty update
+        $cartCtrl->update(); // optional if you implement qty update
         break;
 
     // Checkout
     case 'checkout':
         require_once __DIR__ . '/../app/controllers/CheckoutController.php';
-        (new CheckoutController())->form();
+        $checkoutCtrl = new CheckoutController();
+        $checkoutCtrl->form();
         break;
     case 'checkout_process':
         require_once __DIR__ . '/../app/controllers/CheckoutController.php';
-        (new CheckoutController())->process();
+        $checkoutCtrl = new CheckoutController();
+        $checkoutCtrl->process();
         break;
     case 'checkout_success':
         require_once __DIR__ . '/../app/controllers/CheckoutController.php';
-        (new CheckoutController())->success();
+        $checkoutCtrl = new CheckoutController();
+        $checkoutCtrl->success();
         break;
     /***********************
      * ADMIN ORDERS MODULE
@@ -209,83 +211,95 @@ switch ($page) {
     // List orders (search + filter + pagination)
     case 'admin_orders':
         require_once __DIR__ . '/../app/controllers/AdminOrderController.php';
-        (new AdminOrderController())->index();
+        $adminOrderCtrl = new AdminOrderController();
+        $adminOrderCtrl->index();
         break;
 
     // Detail order
     case 'admin_order_detail':
         require_once __DIR__ . '/../app/controllers/AdminOrderController.php';
-        (new AdminOrderController())->detail();
+        $adminOrderCtrl = new AdminOrderController();
+        $adminOrderCtrl->detail();
         break;
 
     // Update status (order_status/payment_status)
     case 'admin_order_update':
         require_once __DIR__ . '/../app/controllers/AdminOrderController.php';
-        (new AdminOrderController())->updateStatus();
+        $adminOrderCtrl = new AdminOrderController();
+        $adminOrderCtrl->updateStatus();
         break;
 
     // Cancel order
     case 'admin_order_cancel':
         require_once __DIR__ . '/../app/controllers/AdminOrderController.php';
-        (new AdminOrderController())->cancel();
+        $adminOrderCtrl = new AdminOrderController();
+        $adminOrderCtrl->cancel();
         break;
 
     // Cancel order
     case 'admin_order_refund':
         require_once __DIR__ . '/../app/controllers/AdminOrderController.php';
-        (new AdminOrderController())->refund();
+        $adminOrderCtrl = new AdminOrderController();
+        $adminOrderCtrl->refund();
         break;
 
 
     // Export orders (CSV / Excel)
     case 'admin_order_export':
         require_once __DIR__ . '/../app/controllers/AdminOrderController.php';
-        (new AdminOrderController())->export();
+        $adminOrderCtrl = new AdminOrderController();
+        $adminOrderCtrl->export();
         break;
 
     // user orders
     case 'orders':
         require_once '../app/controllers/OrderController.php';
-        $controller = new OrderController();
-        $controller->history();
+        $orderCtrl = new OrderController();
+        $orderCtrl->history();
         break;
 
     case 'order_detail':
         require_once '../app/controllers/OrderController.php';
-        $controller = new OrderController();
-        $controller->detail();
+        $orderCtrl = new OrderController();
+        $orderCtrl->detail();
         break;
 
     // ===================== ORDER CONTROLLER =====================
 
     case 'custom_form':
         require_once __DIR__ . '/../app/controllers/CustomOrderController.php';
-        (new CustomOrderController())->form();
+        $customOrderCtrl = new CustomOrderController();
+        $customOrderCtrl->form();
         break;
 
     case 'custom_create':
         require_once __DIR__ . '/../app/controllers/CustomOrderController.php';
-        (new CustomOrderController())->create();
+        $customOrderCtrl = new CustomOrderController();
+        $customOrderCtrl->create();
         break;
 
     case 'invoice':
         require_once '../app/controllers/InvoiceController.php';
-        (new InvoiceController())->generate();
+        $invoiceCtrl = new InvoiceController();
+        $invoiceCtrl->generate();
         break;
 
     case 'get_snap_token':
         require_once __DIR__ . '/../app/controllers/PaymentController.php';
-        (new PaymentController())->getSnapToken();
+        $paymentCtrl = new PaymentController();
+        $paymentCtrl->getSnapToken();
         break;
 
     case 'payment_verify':
         require_once __DIR__ . '/../app/controllers/PaymentController.php';
-        (new PaymentController())->verify();
+        $paymentCtrl = new PaymentController();
+        $paymentCtrl->verify();
         break;
 
     case 'save_transaction':
         require_once __DIR__ . '/../app/controllers/PaymentController.php';
-        (new PaymentController())->saveTransaction();
+        $paymentCtrl = new PaymentController();
+        $paymentCtrl->saveTransaction();
         break;
 
     // ...
@@ -296,8 +310,8 @@ switch ($page) {
             exit;
         }
         require_once __DIR__ . '/../app/controllers/AdminOrderController.php';
-        $ctrl = new AdminOrderController();
-        $ctrl->updateStatus();
+        $adminOrderCtrl = new AdminOrderController();
+        $adminOrderCtrl->updateStatus();
         break;
 
 
@@ -329,63 +343,75 @@ switch ($page) {
     // API RajaOngkir
     case 'shipping_provinces':
         require_once __DIR__ . '/../app/controllers/ShippingController.php';
-        (new ShippingController())->provinces();
+        $shippingCtrl = new ShippingController();
+        $shippingCtrl->provinces();
         exit; // 👈 UBAH DARI break; MENJADI exit;
     // break; // Hapus atau jadikan komentar
 
     case 'shipping_cities':
         require_once __DIR__ . '/../app/controllers/ShippingController.php';
-        (new ShippingController())->cities();
+        $shippingCtrl = new ShippingController();
+        $shippingCtrl->cities();
         exit; // 👈 UBAH DARI break; MENJADI exit;
     // break;
 
     case 'shipping_districts':
         require_once __DIR__ . '/../app/controllers/ShippingController.php';
-        (new ShippingController())->districts();
+        $shippingCtrl = new ShippingController();
+        $shippingCtrl->districts();
         exit; // Wajib exit;
 
     case 'shipping_subdistricts':
         require_once __DIR__ . '/../app/controllers/ShippingController.php';
-        (new ShippingController())->subdistricts();
+        $shippingCtrl = new ShippingController();
+        $shippingCtrl->subdistricts();
         exit; // Wajib exit;
 
     case 'shipping_cost':
         require_once __DIR__ . '/../app/controllers/ShippingController.php';
-        (new ShippingController())->cost();
+        $shippingCtrl = new ShippingController();
+        $shippingCtrl->cost();
         exit; // 👈 UBAH DARI break; MENJADI exit;
     // break;
 
     // Untuk kasus admin, jika tidak ada output JSON, biarkan break; jika ada output, gunakan exit;
     case 'admin_shipping_update_tracking':
         require_once __DIR__ . '/../app/controllers/ShippingController.php';
-        (new ShippingController())->updateTracking();
+        $shippingCtrl = new ShippingController();
+        $shippingCtrl->updateTracking();
         break; // Asumsi: fungsi ini tidak mengeluarkan JSON mentah
 
     case 'admin_shipping_update_status':
         require_once __DIR__ . '/../app/controllers/ShippingController.php';
-        (new ShippingController())->updateStatus();
+        $shippingCtrl = new ShippingController();
+        $shippingCtrl->updateStatus();
         break; // Asumsi: fungsi ini tidak mengeluarkan JSON mentah
 
     // Admin rewards
     case 'admin_rewards':
         require_once __DIR__ . '/../app/controllers/AdminRewardsController.php';
-        (new AdminRewardsController())->index();
+        $adminRewardsCtrl = new AdminRewardsController();
+        $adminRewardsCtrl->index();
         break;
     case 'admin_rewards_form':
         require_once __DIR__ . '/../app/controllers/AdminRewardsController.php';
-        (new AdminRewardsController())->form();
+        $adminRewardsCtrl = new AdminRewardsController();
+        $adminRewardsCtrl->form();
         break;
     case 'admin_rewards_store':
         require_once __DIR__ . '/../app/controllers/AdminRewardsController.php';
-        (new AdminRewardsController())->store();
+        $adminRewardsCtrl = new AdminRewardsController();
+        $adminRewardsCtrl->store();
         break;
     case 'admin_rewards_update':
         require_once __DIR__ . '/../app/controllers/AdminRewardsController.php';
-        (new AdminRewardsController())->update();
+        $adminRewardsCtrl = new AdminRewardsController();
+        $adminRewardsCtrl->update();
         break;
     case 'admin_rewards_delete':
         require_once __DIR__ . '/../app/controllers/AdminRewardsController.php';
-        (new AdminRewardsController())->destroy();
+        $adminRewardsCtrl = new AdminRewardsController();
+        $adminRewardsCtrl->destroy();
         break;
 
     // User rewards

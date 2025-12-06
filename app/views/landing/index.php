@@ -65,6 +65,7 @@ $user = $_SESSION['user'] ?? null;
             background: transparent;
             font-size: 0.9rem;
             transition: all 0.2s;
+            text-decoration: none;
         }
 
         .nav-btn:hover,
@@ -149,6 +150,7 @@ $user = $_SESSION['user'] ?? null;
             font-weight: 600;
             font-size: 1.05rem;
             transition: background-color 0.2s, transform 0.2s;
+            text-decoration: none;
             box-shadow: 0 4px 12px rgba(121, 161, 191, 0.2);
         }
 
@@ -248,6 +250,7 @@ $user = $_SESSION['user'] ?? null;
             font-weight: 600;
             font-size: 0.875rem;
             transition: all 0.2s;
+            text-decoration: none;
         }
 
         .btn-outline-soft:hover {
@@ -286,6 +289,7 @@ $user = $_SESSION['user'] ?? null;
             font-size: 1rem;
             margin: 0 0.5rem;
             transition: all 0.2s;
+            text-decoration: none;
         }
 
         .footer-btn:hover {
@@ -389,7 +393,7 @@ $user = $_SESSION['user'] ?? null;
 
             <div class="d-flex align-items-center flex-wrap gap-1 ms-auto">
                 <?php if ($user): ?>
-                    <a href="?page=consultations" class="position-relative">
+                    <a href="?page=consultations" class="position-relative" style="text-decoration: none;">
                         <div class="nav-btn">
                             <i class="fas fa-comments"></i>
                         </div>
@@ -441,7 +445,7 @@ $user = $_SESSION['user'] ?? null;
 
     <!-- 🔹 Video Hero — Full viewport height -->
     <div class="hero-video-container">
-        <video autoplay muted playsinline poster="videos/poster-hero.jpg" controls controlsList="nodownload">
+        <video autoplay muted playsinline poster="videos/poster-hero.jpg" controlsList="nodownload" loop>
             <source src="videos/hero-1.mp4" type="video/mp4">
             Browser Anda tidak mendukung video.
         </video>
