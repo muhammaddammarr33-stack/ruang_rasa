@@ -122,6 +122,7 @@
             font-weight: 500;
             font-size: 0.95rem;
             transition: background-color 0.2s;
+            text-decoration: none;
         }
 
         .btn-complete:hover {
@@ -203,7 +204,7 @@
         <?php if (($_SESSION['user']['role'] ?? '') !== 'admin'):
             $hasAdminMessage = false;
             $checkAdmin = $db->prepare("
-        SELECT 1 FROM consultation_messages 
+        SELECT 1 FROM consultation_messages
         WHERE consultation_id = ? AND sender_id != ?
         LIMIT 1
       ");
@@ -323,19 +324,18 @@
             const chatBox = document.getElementById('chat-box');
 
             if (messageType === 'product' && productId) {
-                const imageUrl = productImage || 'https://via.placeholder.com/300x150?text=No+Image';
+                const imageUrl = productImage ? 'uploads/' + productImage : 'https://placehold.co/300x150?text=No+Image&font=poppins';
                 const priceFormatted = productPrice ? 'Rp ' + parseFloat(productPrice).toLocaleString('id-ID') : '';
 
                 const card = document.createElement('div');
                 card.className = 'product-card mb-3';
                 card.innerHTML = `
-          <img src="${imageUrl}" class="card-img-top" 
-               onerror="this.src='https://via.placeholder.com/300x150?text=Product+Image'">
+          <img src="${imageUrl}" class="card-img-top">
           <div class="card-body p-2">
             <h6 class="card-title mb-1">${msg}</h6>
             <p class="card-text text-danger mb-2">${priceFormatted}</p>
             <div class="d-grid gap-2">
-              <button class="btn btn-sm btn-primary add-to-cart-btn" 
+              <button class="btn btn-sm btn-primary add-to-cart-btn"
                       data-product-id="${productId}" style="font-size: 0.85rem;">
                 ➕ Tambah ke Keranjang
               </button>
