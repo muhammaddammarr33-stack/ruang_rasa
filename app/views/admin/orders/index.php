@@ -9,6 +9,7 @@
     <title>Admin - Orders</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         :root {
             --accent: #7093B3;
@@ -63,39 +64,7 @@
             border-color: var(--accent-hover);
         }
 
-        .btn-success {
-            background-color: #d1e7dd;
-            color: #0f5132;
-            border: 1px solid #badbcc;
-        }
 
-        .btn-success:hover {
-            background-color: #bcd0c7;
-        }
-
-        table {
-            font-size: 0.875rem;
-            margin-top: 0.75rem;
-        }
-
-        table thead th {
-            background-color: #fafafa;
-            font-weight: 600;
-            font-size: 0.8125rem;
-            padding: 0.625rem 0.75rem;
-            color: var(--dark);
-            border: 1px solid var(--border);
-        }
-
-        table tbody td {
-            padding: 0.625rem 0.75rem;
-            vertical-align: middle;
-            border: 1px solid var(--border);
-        }
-
-        table tbody tr:hover {
-            background-color: rgba(112, 147, 179, 0.04);
-        }
 
         .pagination .page-link {
             color: var(--accent);
@@ -119,6 +88,22 @@
             color: var(--muted);
             padding: 1rem;
             text-align: center;
+        }
+
+        .breadcrumb {
+            background: transparent;
+            padding: 0;
+            margin-bottom: 1rem;
+            font-size: 0.8125rem;
+        }
+
+        .breadcrumb a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .breadcrumb-item.active {
+            color: var(--muted);
         }
     </style>
 </head>
@@ -189,13 +174,14 @@
             unset($exportQuery['page']);
             unset($exportQuery['p']);
             ?>
-            <a href="?page=admin_order_export&<?= http_build_query($exportQuery) ?>" class="btn btn-success btn-sm">
+            <a href="?page=admin_order_export&<?= http_build_query($exportQuery) ?>"
+                class="btn btn-outline-success btn-sm">
                 Export CSV
             </a>
         </div>
 
         <!-- TABLE -->
-        <table class="table">
+        <table class="table table-hover table-bordered">
             <thead>
                 <tr>
                     <th>#</th>

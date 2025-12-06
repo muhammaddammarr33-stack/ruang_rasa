@@ -7,6 +7,7 @@
     <title>Manajemen Promosi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         :root {
             --accent: #7093B3;
@@ -62,40 +63,6 @@
             border-color: var(--accent-hover);
         }
 
-        .alert {
-            font-size: 0.875rem;
-            padding: 0.625rem 1rem;
-            border-radius: 6px;
-            border: 1px solid #d1e7dd;
-            background-color: #f8f9fa;
-            color: var(--dark);
-            margin-bottom: 1rem;
-        }
-
-        table {
-            font-size: 0.875rem;
-            margin-top: 0.25rem;
-        }
-
-        table thead th {
-            background-color: #fafafa;
-            font-weight: 600;
-            font-size: 0.8125rem;
-            padding: 0.625rem 0.75rem;
-            color: var(--dark);
-            border: 1px solid var(--border);
-        }
-
-        table tbody td {
-            padding: 0.625rem 0.75rem;
-            vertical-align: middle;
-            border: 1px solid var(--border);
-        }
-
-        table tbody tr:hover {
-            background-color: rgba(112, 147, 179, 0.04);
-        }
-
         .btn-warning {
             background-color: var(--warning-bg);
             border: 1px solid var(--warning-border);
@@ -104,6 +71,7 @@
 
         .btn-warning:hover {
             background-color: #ffecb5;
+            border-color: var(--warning-border);
         }
 
         .btn-danger {
@@ -114,6 +82,17 @@
 
         .btn-danger:hover {
             background-color: #f1b0b7;
+            border-color: var(--danger-border);
+        }
+
+        .alert {
+            font-size: 0.875rem;
+            padding: 0.625rem 1rem;
+            border-radius: 6px;
+            border: 1px solid #d1e7dd;
+            background-color: #f8f9fa;
+            color: var(--dark);
+            margin-bottom: 1rem;
         }
 
         .empty-cell {
@@ -122,6 +101,22 @@
             font-size: 0.875rem;
             padding: 1rem;
             text-align: center;
+        }
+
+        .breadcrumb {
+            background: transparent;
+            padding: 0;
+            margin-bottom: 1rem;
+            font-size: 0.8125rem;
+        }
+
+        .breadcrumb a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .breadcrumb-item.active {
+            color: var(--muted);
         }
     </style>
 </head>
@@ -150,7 +145,7 @@
             </div>
         <?php endif; ?>
 
-        <table class="table">
+        <table class="table table-bordered table-hover">
             <thead>
                 <tr>
                     <th>Nama</th>

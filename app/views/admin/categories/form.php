@@ -21,7 +21,6 @@
     <style>
         :root {
             --accent: #7093B3;
-            /* ✅ Biru pastel sesuai preferensi */
             --accent-hover: #5d7da0;
             --dark-grey: #343D46;
             --text-muted: #6c757d;
@@ -42,11 +41,8 @@
             background: white;
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            /* ✅ Lebih tajam */
             box-shadow: none;
-            /* ✅ Hilangkan shadow berlebih */
             padding: 1.25rem;
-            /* ✅ Lebih kecil dari 2.25rem */
             max-width: 580px;
             margin: 1rem auto;
         }
@@ -75,7 +71,6 @@
         .form-control,
         .form-control:focus {
             border-radius: 6px;
-            /* ✅ Lebih kecil */
             padding: 0.625rem 0.875rem;
             border: 1px solid var(--border-color);
             font-size: 0.875rem;
@@ -107,16 +102,6 @@
         .btn-primary:hover {
             background-color: var(--accent-hover);
             border-color: var(--accent-hover);
-        }
-
-        .btn-secondary {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            color: var(--dark-grey);
-        }
-
-        .btn-secondary:hover {
-            background-color: #e9ecef;
         }
 
         .breadcrumb {
@@ -179,7 +164,7 @@
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save me-1"></i><?= isset($cat) ? 'Simpan' : 'Tambah' ?>
                     </button>
-                    <a href="?page=admin_categories" class="btn btn-secondary">
+                    <a href="?page=admin_categories" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left me-1"></i>Kembali
                     </a>
                 </div>

@@ -70,23 +70,7 @@
             overflow: hidden;
         }
 
-        .table thead th {
-            background-color: #fafafa;
-            font-weight: 600;
-            color: var(--dark-grey);
-            padding: 0.75rem 1rem;
-            font-size: 0.8125rem;
-        }
 
-        .table tbody td {
-            padding: 0.75rem 1rem;
-            vertical-align: middle;
-            font-size: 0.875rem;
-        }
-
-        .table tbody tr:hover {
-            background-color: rgba(112, 147, 179, 0.05);
-        }
 
         .btn-add {
             background-color: var(--accent);
@@ -104,6 +88,7 @@
             border-color: var(--accent-hover);
             transform: none;
             box-shadow: none;
+            color: white;
         }
 
         .btn-edit,
@@ -112,6 +97,9 @@
             font-size: 0.8125rem;
             border-radius: 5px;
             font-weight: 500;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .btn-edit {
@@ -159,51 +147,6 @@
         .breadcrumb-item.active {
             color: var(--text-muted);
         }
-
-        /* Responsif: versi mobile tetap ringkas */
-        @media (max-width: 576px) {
-            .admin-header {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .table thead {
-                display: none;
-            }
-
-            .table tbody tr {
-                display: block;
-                margin-bottom: 0.75rem;
-                background: white;
-                border: 1px solid var(--border-color);
-                border-radius: 6px;
-                padding: 0.75rem;
-            }
-
-            .table tbody td {
-                display: flex;
-                justify-content: space-between;
-                padding: 0.375rem 0 !important;
-                font-size: 0.875rem;
-            }
-
-            .table tbody td:before {
-                content: attr(data-label) ": ";
-                font-weight: 600;
-                min-width: 40%;
-            }
-
-            .table tbody td:last-child {
-                display: flex;
-                gap: 0.5rem;
-                flex-wrap: wrap;
-            }
-
-            .table tbody td:last-child:before {
-                content: "Aksi:";
-                min-width: auto;
-            }
-        }
     </style>
 </head>
 
@@ -241,22 +184,24 @@
         <!-- Tabel atau Pesan Kosong -->
         <?php if (!empty($categories)): ?>
             <div class="card-table">
-                <table class="table">
+                <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Nama</th>
-                            <th>Deskripsi</th>
-                            <th>Aksi</th>
+                            <th scope="col">No</th>
+                            <th scope="col">Nama</th>
+                            <th scope="col">Deskripsi</th>
+                            <th scope="col">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($categories as $c): ?>
+                        <?php
+                        $i = 1;
+                        foreach ($categories as $c): ?>
                             <tr>
-                                <td data-label="ID"><?= $c['id'] ?></td>
+                                <th data-label="No" scope="row"><?= $i++ ?></th>
                                 <td data-label="Nama"><?= htmlspecialchars($c['name']) ?></td>
                                 <td data-label="Deskripsi"><?= htmlspecialchars($c['description'] ?: '–') ?></td>
-                                <td data-label="Aksi">
+                                <td data-label="Aksi" class="d-flex flex-row gap-2">
                                     <a href="?page=admin_category_form&id=<?= $c['id'] ?>" class="btn btn-edit">
                                         <i class="fas fa-edit me-1"></i>Edit
                                     </a>

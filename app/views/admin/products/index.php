@@ -70,31 +70,12 @@ if (!isset($_SESSION))
             overflow: hidden;
         }
 
-        .table thead th {
-            background-color: #fafafa;
-            font-weight: 600;
-            color: var(--dark);
-            padding: 0.75rem 1rem;
-            font-size: 0.8125rem;
-            white-space: nowrap;
-        }
-
-        .table tbody td {
-            padding: 0.75rem 1rem;
-            vertical-align: middle;
-            font-size: 0.875rem;
-        }
-
         .product-image {
             width: 52px;
             height: 52px;
             object-fit: cover;
             border-radius: 6px;
             border: 1px solid var(--border);
-        }
-
-        .table tbody tr:hover {
-            background-color: rgba(112, 147, 179, 0.05);
         }
 
         .btn-add {
@@ -193,58 +174,6 @@ if (!isset($_SESSION))
         .stock-normal {
             color: var(--accent);
         }
-
-        /* Responsif */
-        @media (max-width: 768px) {
-            .admin-header {
-                align-items: stretch;
-            }
-
-            .table thead {
-                display: none;
-            }
-
-            .table tbody tr {
-                display: block;
-                margin-bottom: 0.75rem;
-                background: white;
-                border: 1px solid var(--border);
-                border-radius: 6px;
-                padding: 0.75rem;
-            }
-
-            .table tbody td {
-                display: flex;
-                justify-content: space-between;
-                padding: 0.375rem 0 !important;
-                border: none;
-            }
-
-            .table tbody td:before {
-                content: attr(data-label) ": ";
-                font-weight: 600;
-                color: var(--dark);
-                min-width: 35%;
-            }
-
-            .table tbody td:last-child {
-                display: flex;
-                gap: 0.5rem;
-                justify-content: flex-start;
-                flex-wrap: wrap;
-                padding-top: 0.75rem !important;
-            }
-
-            .table tbody td:last-child:before {
-                content: "Aksi:";
-                min-width: auto;
-            }
-
-            .product-image {
-                width: 48px;
-                height: 48px;
-            }
-        }
     </style>
 </head>
 
@@ -292,19 +221,21 @@ if (!isset($_SESSION))
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Nama</th>
-                            <th>Harga</th>
-                            <th>Stok</th>
-                            <th>Kategori</th>
-                            <th>Gambar</th>
-                            <th>Aksi</th>
+                            <th scope="col">No</th>
+                            <th scope="col">Nama</th>
+                            <th scope="col">Harga</th>
+                            <th scope="col">Stok</th>
+                            <th scope="col">Kategori</th>
+                            <th scope="col">Gambar</th>
+                            <th scope="col">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($products as $p): ?>
+                        <?php
+                        $i = 1;
+                        foreach ($products as $p): ?>
                             <tr>
-                                <td data-label="ID"><?= $p['id'] ?></td>
+                                <th data-label="ID"><?= $i++ ?></th>
                                 <td data-label="Nama"><?= htmlspecialchars($p['name']) ?></td>
                                 <td data-label="Harga">Rp <?= number_format($p['price'], 0, ',', '.') ?></td>
                                 <td data-label="Stok" class="<?= $p['stock'] <= 5 ? 'stock-low' : 'stock-normal' ?>">

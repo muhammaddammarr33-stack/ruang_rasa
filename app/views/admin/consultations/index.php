@@ -1,3 +1,12 @@
+<?php
+$statusMap = [
+    'submitted' => ['label' => 'Menunggu', 'class' => 'waiting'],
+    'suggested' => ['label' => 'Rekomendasi Siap', 'class' => 'ready'],
+    'in_progress' => ['label' => 'Sedang Berlangsung', 'class' => 'progres'],
+    'completed' => ['label' => 'Selesai', 'class' => 'completed']
+];
+?>
+
 <!doctype html>
 <html lang="id">
 
@@ -7,6 +16,7 @@
     <title>Admin - Konsultasi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         :root {
             --accent: #7093B3;
@@ -48,38 +58,14 @@
             margin-bottom: 1rem;
         }
 
-        table {
-            font-size: 0.875rem;
-            margin-top: 0.75rem;
-        }
-
-        table thead th {
-            background-color: #fafafa;
-            font-weight: 600;
-            font-size: 0.8125rem;
-            padding: 0.625rem 0.75rem;
-            color: var(--dark);
-            border: 1px solid var(--border);
-        }
-
-        table tbody td {
-            padding: 0.625rem 0.75rem;
-            vertical-align: middle;
-            border: 1px solid var(--border);
-        }
-
-        table tbody tr:hover {
-            background-color: rgba(112, 147, 179, 0.04);
-        }
 
         .status-badge {
             display: inline-block;
-            padding: 0.25em 0.6em;
+            padding: 0.35rem 0.75rem;
             font-size: 0.8125rem;
             font-weight: 500;
-            border-radius: 4px;
-            background-color: #e9ecef;
-            color: var(--dark);
+            border-radius: 20px;
+            text-align: center;
         }
 
         .status-badge.waiting {
@@ -92,7 +78,7 @@
             color: #0f5132;
         }
 
-        .status-badge.progress {
+        .status-badge.progres {
             background-color: #cce5ff;
             color: #004085;
         }
@@ -126,20 +112,24 @@
         }
 
         .btn-outline-primary:hover {
-            background-color: rgba(112, 147, 179, 0.08);
+            background-color: var(--accent-hover);
             border-color: var(--accent-hover);
         }
 
-        .btn-secondary {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            color: var(--dark);
-            font-size: 0.875rem;
-            padding: 0.5rem 1rem;
+        .breadcrumb {
+            background: transparent;
+            padding: 0;
+            margin-bottom: 1rem;
+            font-size: 0.8125rem;
         }
 
-        .btn-secondary:hover {
-            background-color: #e9ecef;
+        .breadcrumb a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .breadcrumb-item.active {
+            color: var(--muted);
         }
     </style>
 </head>
@@ -166,36 +156,31 @@
             </div>
         <?php endif; ?>
 
-        <table class="table">
+        <table class="table table-bordered table-hover">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>User</th>
-                    <th>Untuk</th>
-                    <th>Anggaran</th>
-                    <th>Status</th>
-                    <th>Tanggal</th>
-                    <th>Aksi</th>
+                    <th scope="col">No</th>
+                    <th scope="col">User</th>
+                    <th scope="col">Untuk</th>
+                    <th scope="col">Anggaran</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Tanggal</th>
+                    <th scope="col">Aksi</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($consultations as $c): ?>
+                <?php
+                $i = 1;
+                foreach ($consultations as $c): ?>
                     <tr>
-                        <td><?= $c['id'] ?></td>
+                        <th scope="row"><?= $i++ ?></th>
                         <td><?= htmlspecialchars($c['user_name']) ?></td>
                         <td><?= htmlspecialchars($c['recipient'] ?? '–') ?></td>
                         <td><?= htmlspecialchars($c['budget_range'] ?? '–') ?></td>
                         <td>
-                            <?php
-                            $statusMap = [
-                                'submitted' => ['label' => 'Menunggu', 'class' => 'waiting'],
-                                'suggested' => ['label' => 'Rekomendasi Siap', 'class' => 'ready'],
-                                'in_progress' => ['label' => 'Sedang Berlangsung', 'class' => 'progress'],
-                                'completed' => ['label' => 'Selesai', 'class' => 'completed']
-                            ];
-                            $status = $statusMap[$c['status']] ?? ['label' => ucfirst($c['status']), 'class' => ''];
-                            echo '<span class="status-badge ' . $status['class'] . '">' . htmlspecialchars($status['label']) . '</span>';
-                            ?>
+                            <?php $status = $statusMap[$c['status']] ?? ['label' => ucfirst($c['status']), 'class' => '']; ?>
+                            <span
+                                class="status-badge badge <?= $status['class'] ?>"><?= htmlspecialchars($status['label']) ?></span>
                         </td>
                         <td><?= date('d M Y H:i', strtotime($c['created_at'])) ?></td>
                         <td>
@@ -214,7 +199,7 @@
             </tbody>
         </table>
 
-        <a href="?page=admin_dashboard" class="btn btn-secondary mt-3">
+        <a href="?page=admin_dashboard" class="btn btn-outline-secondary mt-3">
             ⬅ Kembali
         </a>
     </div>

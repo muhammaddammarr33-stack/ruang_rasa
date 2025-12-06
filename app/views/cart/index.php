@@ -124,6 +124,7 @@ $cart = $_SESSION['cart'] ?? [];
             padding: 0.4rem 0.8rem;
             font-weight: 600;
             font-size: 0.85rem;
+            text-decoration: none;
         }
 
         .btn-danger-custom {
@@ -134,6 +135,7 @@ $cart = $_SESSION['cart'] ?? [];
             padding: 0.4rem 0.8rem;
             font-weight: 600;
             font-size: 0.85rem;
+            text-decoration: none;
         }
 
         .form-control-sm {
@@ -174,7 +176,9 @@ $cart = $_SESSION['cart'] ?? [];
         }
 
         .checkout-btn {
-            display: inline-block;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
             background: white;
             color: var(--soft-blue);
             font-weight: 700;
@@ -291,7 +295,8 @@ $cart = $_SESSION['cart'] ?? [];
         <?php else: ?>
             <div class="cart-card">
                 <form method="post" action="?page=cart_update">
-                    <table class="table cart-table align-middle">
+
+                    <table class="table table-hover">
                         <thead class="table-light">
                             <tr>
                                 <th scope="col">Produk</th>
